@@ -1,0 +1,105 @@
+from django.db import models
+from django.contrib.auth.models import User
+from datetime import timedelta
+from django.utils import timezone  # koristimo Django-ov timezone
+
+# helper za default rok (+7 dana) – ovo se može serijalizirati u migracijama
+def default_razuman_rok():
+    return timezone.localdate() + timedelta(days=7)
+
+class Dogadjaj(models.Model):
+    RADNJA_CHOICES = [
+        ('zzi','Zahtjev za informacijom (ZZI)'),
+        ('claim','Potraživanje'),
+        ('notice','Obavijest'),
+        ('improvement','Poboljšanje'),
+        ('suggestion','Prijedlog'),
+        ('other','Ostalo'),
+    ]
+
+    broj = models.PositiveIntegerField("Broj događaja", unique=True, blank=True, null=True)
+    naziv = models.CharField("Naziv događaja", max_length=255)
+    opis = models.TextField("Opis", blank=True)
+    datum = models.DateField("Datum događaja", default=timezone.localdate)
+    preporucena_radnja = models.CharField("Preporučena radnja", max_length=20, choices=RADNJA_CHOICES)
+
+    class Meta:
+        verbose_name = "Događaj"
+        verbose_name_plural = "Događaji"
+        ordering = ['broj']
+
+    def save(self, *args, **kwargs):
+        if self.broj is None:  # ako nije ručno zadan
+            last = Dogadjaj.objects.order_by('-broj').first()
+            self.broj = 1 if not last else last.broj + 1
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"{self.broj} – {self.naziv} ({self.get_preporucena_radnja_display()})"
+
+class Dopis(models.Model):
+    STATUS_CHOICES = [
+        ('open','Otvoreno'),
+        ('answered','Odgovoreno'),
+        ('closed','Zatvoreno'),
+    ]
+    VRSTA_CHOICES = [
+        ('incoming', 'Ulazno'),
+        ('outgoing', 'Izlazno'),
+    ]
+
+    dogadjaj = models.ForeignKey(Dogadjaj, on_delete=models.CASCADE, related_name="dopisi")
+    broj = models.CharField("Broj dopisa", max_length=50, blank=True)
+    vrsta = models.CharField("Vrsta dopisa", max_length=20, choices=VRSTA_CHOICES, default='incoming')
+
+    # default današnji datum (koristimo timezone.localdate – sigurno za migracije)
+    poslano = models.DateField("Poslano", default=timezone.localdate)
+
+    # default +7 dana (preko helper funkcije gore)
+    razuman_rok = models.DateField("Razuman rok za odgovor", default=default_razuman_rok)
+
+    status = models.CharField("Status", max_length=20, choices=STATUS_CHOICES, default='open')
+    sadrzaj = models.TextField("Sadržaj", blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['razuman_rok', '-created_at']
+        verbose_name = "Dopis"
+        verbose_name_plural = "Dopisi"
+
+    def __str__(self):
+        return f"Dopis {self.broj or '-'} ({self.get_vrsta_display()})"
+
+    @property
+    def days_to_due(self):
+        if self.razuman_rok:
+            return (self.razuman_rok - timezone.localdate()).days
+        return None
+
+
+class Biljeska(models.Model):
+    dopis = models.ForeignKey(Dopis, on_delete=models.CASCADE, related_name='biljeske')
+    autor = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
+    tekst = models.TextField("Bilješka / Odgovor")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "Bilješka"
+        verbose_name_plural = "Bilješke"
+
+    def __str__(self):
+        return f"Bilješka za {self.dopis}"
+
+
+class Prilog(models.Model):
+    dopis = models.ForeignKey(Dopis, on_delete=models.CASCADE, related_name='prilozi')
+    file = models.FileField(upload_to='prilozi/')
+    opis = models.CharField("Opis", max_length=255, blank=True)
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "Prilog"
+        verbose_name_plural = "Prilozi"
+
+    def __str__(self):
+        return f"Prilog za {self.dopis}"

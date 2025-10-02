@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="hr">
+<head>
+  <meta charset="utf-8">
+  <title>{{ dogadjaj.broj }} – {{ dogadjaj.naziv }}</title>
+  <!-- Bootstrap -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</head>
+<body class="container my-4">
+
+  <div class="d-flex align-items-start justify-content-between flex-wrap gap-2 mb-3">
+    <div>
+      <h1 class="h3 mb-1">{{ dogadjaj.broj }} – {{ dogadjaj.naziv }}</h1>
+      <div class="text-muted">
+        Preporučena radnja: <strong>{{ dogadjaj.get_preporucena_radnja_display }}</strong>
+        • Datum: <strong>{{ dogadjaj.datum }}</strong>
+      </div>
+      {% if dogadjaj.opis %}
+        <p class="mt-2 mb-0">{{ dogadjaj.opis }}</p>
+      {% endif %}
+    </div>
+    <div class="d-flex flex-wrap gap-2">
+      <a class="btn btn-success" href="{% url 'dopis_create_for_event' dogadjaj.id %}">+ Novi dopis</a>
+      <a class="btn btn-warning" href="{% url 'dogadjaj_update' dogadjaj.id %}">Uredi događaj</a>
+      <a class="btn btn-secondary" href="{% url 'dogadjaj_list' %}">← Natrag</a>
+    </div>
+  </div>
+
+  <!-- Tko je na potezu -->
+  <div class="mb-3">
+    {% if ball_on_us %}
+      <span class="badge text-bg-primary">Na nama je potez (zadnji dopis: Ulazni)</span>
+    {% else %}
+      <span class="badge text-bg-secondary">Kod njih je potez (zadnji dopis: Izlazni)</span>
+    {% endif %}
+    {% if last %}
+      <span class="ms-2 text-muted">Zadnji dopis: {{ last.poslano|default:"—" }}</span>
+    {% endif %}
+  </div>
+
+  <h2 class="h5 mb-3">Dopisi</h2>
+
+  <table class="table table-striped table-bordered align-middle">
+    <thead class="table-light">
+      <tr>
+        <th style="width:120px;">Broj</th>
+        <th style="width:140px;">Vrsta</th>
+        <th style="width:120px;">Poslano</th>
+        <th style="width:220px;">Razuman rok</th>
+        <th style="width:140px;">Status</th>
+        <th>Napomena</th>
+        <th style="width:110px;"></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for dopis, cls, label in rows %}
+      <tr>
+        <td>{{ dopis.broj|default:"—" }}</td>
+        <td>{{ dopis.get_vrsta_display }}</td>
+        <td>{{ dopis.poslano|default:"—" }}</td>
+        <td>
+          {% if dopis.razuman_rok %}
+            {# mapiramo naše klase na Bootstrap badge boje #}
+            {% if cls == 'bg-red' %}
+              <span class="badge text-bg-danger">{{ label }}</span>
+            {% elif cls == 'bg-yellow' %}
+              <span class="badge text-bg-warning">{{ label }}</span>
+            {% elif cls == 'bg-green' %}
+              <span class="badge text-bg-success">{{ label }}</span>
+            {% elif cls == 'bg-muted' %}
+              <span class="badge text-bg-secondary">{{ label }}</span>
+            {% else %}
+              <span class="badge text-bg-light text-dark">{{ label }}</span>
+            {% endif %}
+            <div class="text-muted small mt-1">{{ dopis.razuman_rok }}</div>
+          {% else %}
+            —
+          {% endif %}
+        </td>
+        <td>{{ dopis.get_status_display }}</td>
+        <td class="text-muted">{{ dopis.sadrzaj|truncatechars:200 }}</td>
+        <td class="text-end">
+          <a class="btn btn-sm btn-outline-primary" href="{% url 'dopis_update' dopis.id %}">Uredi</a>
+        </td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="7">Nema dopisa za ovaj događaj.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+</body>
+</html>
