@@ -3,6 +3,7 @@ from django.utils import timezone
 from django.http import HttpRequest
 from .models import Dogadjaj, Dopis
 from .forms import DogadjajForm, DopisForm
+from datetime import date, datetime
 
 
 def dogadjaj_list(request: HttpRequest):
@@ -57,11 +58,28 @@ def dogadjaj_list(request: HttpRequest):
         last = d.dopisi.all().order_by("-poslano", "-created_at").first()
         ball_on_us = bool(last and last.vrsta == "incoming")  # Ulazno ⇒ na nama loptica
 
+        # ⬇️ NOVO: odredi klasu boje cijelog događaja (red u tablici)
+        event_cls = ""
+        if ball_on_us and last and getattr(last, "razuman_rok", None):
+            rok = last.razuman_rok
+            # podrži i DateTimeField i DateField
+            if isinstance(rok, datetime):
+                rok_date = timezone.localdate(rok)
+            else:
+                rok_date = rok
+            delta_days = (rok_date - today).days
+            if delta_days < 0:
+                event_cls = "table-danger"
+            elif delta_days <= 14:
+                event_cls = "table-warning"
+
         dopisi_rows = []
         for dp in d.dopisi.all().order_by(d_ordering, "-created_at"):
             cls, label = due_badge(dp, ball_on_us)
             dopisi_rows.append((dp, cls, label))
-        rows.append((d, dopisi_rows, ball_on_us, last))
+
+        # ⬇️ rows sada nosi i event_cls
+        rows.append((d, dopisi_rows, ball_on_us, last, event_cls))
 
     return render(
         request,
