@@ -1,26 +1,19 @@
+# gradiliste/urls.py
 from django.contrib import admin
 from django.urls import path
-from django.conf import settings
-from django.conf.urls.static import static
-
-from evidencija.views import (
-    dogadjaj_list, dogadjaj_detail,
-    dogadjaj_create, dogadjaj_update,
-    dopis_create, dopis_update,
-)
+from evidencija import views  # naše view funkcije iz app-a "evidencija"
 
 urlpatterns = [
+    # Početna → lista gradilišta
+    path("", views.gradiliste_list, name="gradiliste_list"),
+
+    # Gradilišta
+    path("gradilista/novo/", views.gradiliste_create, name="gradiliste_create"),
+
+    # Događaji unutar gradilišta
+    path("gradilista/<int:gradiliste_id>/", views.dogadjaj_list, name="dogadjaj_list"),
+    path("gradilista/<int:gradiliste_id>/dogadjaj/<int:pk>/", views.dogadjaj_detail, name="dogadjaj_detail"),
+
+    # Admin (ako koristiš)
     path("admin/", admin.site.urls),
-
-    path("", dogadjaj_list, name="dogadjaj_list"),
-    path("dogadjaj/<int:pk>/", dogadjaj_detail, name="dogadjaj_detail"),
-    path("dogadjaj/novi/", dogadjaj_create, name="dogadjaj_create"),
-    path("dogadjaj/<int:pk>/uredi/", dogadjaj_update, name="dogadjaj_update"),
-
-    path("dopis/novi/", dopis_create, name="dopis_create"),
-    path("dopis/novi/<int:dogadjaj_id>/", dopis_create, name="dopis_create_for_event"),
-    path("dopis/<int:pk>/uredi/", dopis_update, name="dopis_update"),
 ]
-
-if settings.DEBUG:
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
