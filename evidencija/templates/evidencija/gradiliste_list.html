@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="hr">
+<head>
+  <meta charset="utf-8">
+  <title>Gradilišta</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="container my-4">
+
+  <div class="d-flex align-items-center justify-content-between mb-3">
+    <h1 class="h4 mb-0">Gradilišta</h1>
+    <a class="btn btn-success" href="{% url 'gradiliste_create' %}">+ Novo gradilište</a>
+  </div>
+
+  {% if gradilista %}
+    <div class="list-group">
+      {% for g in gradilista %}
+        <a class="list-group-item list-group-item-action d-flex justify-content-between align-items-center"
+           href="{% url 'dogadjaj_list' g.id %}">
+          <span>
+            <strong>{{ g.naziv }}</strong>
+            {% if g.lokacija %}<span class="text-muted ms-2">{{ g.lokacija }}</span>{% endif %}
+          </span>
+          <span class="badge text-bg-primary">Otvori</span>
+        </a>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="alert alert-info">
+      Još nema gradilišta. Dodaj prvo: <a href="{% url 'gradiliste_create' %}">Novo gradilište</a>.
+    </div>
+  {% endif %}
+
+</body>
+</html>

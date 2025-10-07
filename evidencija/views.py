@@ -1,13 +1,32 @@
 from django.shortcuts import render, get_object_or_404, redirect
+from django.urls import reverse
 from django.utils import timezone
 from django.http import HttpRequest
-from .models import Dogadjaj, Dopis
-from .forms import DogadjajForm, DopisForm
+from .models import Dogadjaj, Dopis, Gradiliste
+from .forms import DogadjajForm, DopisForm, GradilisteForm
 from datetime import date, datetime
 
+def gradiliste_list(request):
+    gradilista = Gradiliste.objects.all()
+    return render(request, "evidencija/gradiliste_list.html", {"gradilista": gradilista})
 
-def dogadjaj_list(request: HttpRequest):
-    # --- SORT Događaji ---
+def gradiliste_create(request):
+    if request.method == "POST":
+        form = GradilisteForm(request.POST)
+        if form.is_valid():
+            g = form.save()
+            return redirect("dogadjaj_list", gradiliste_id=g.id)
+    else:
+        form = GradilisteForm()
+    return render(request, "evidencija/form.html", {"title": "Novo gradilište", "form": form})
+
+from datetime import datetime  # ako već nije uvezeno
+
+def dogadjaj_list(request, gradiliste_id):
+    """Lista događaja filtrirana po odabranom gradilištu."""
+    gradiliste = get_object_or_404(Gradiliste, pk=gradiliste_id)
+
+    # ----- tvoje postojeće sortiranje (ostavi kako imaš) -----
     sort = request.GET.get("sort", "broj_asc")
     ordering_map = {
         "broj_asc": "broj",
@@ -17,7 +36,6 @@ def dogadjaj_list(request: HttpRequest):
     }
     ordering = ordering_map.get(sort, "broj")
 
-    # --- SORT Dopisi (unutar svakog događaja) ---
     d_sort = request.GET.get("d_sort", "rok_asc")
     d_ordering_map = {
         "broj_asc": "broj",
@@ -29,18 +47,20 @@ def dogadjaj_list(request: HttpRequest):
     }
     d_ordering = d_ordering_map.get(d_sort, "razuman_rok")
 
-    dogadjaji = Dogadjaj.objects.prefetch_related("dopisi").order_by(ordering)
+    # ⬇⬇⬇ NAJVAŽNIJE: filtriramo po gradilištu
+    dogadjaji = (
+        Dogadjaj.objects
+        .filter(gradiliste=gradiliste)
+        .prefetch_related("dopisi")
+        .order_by(ordering)
+    )
+
     today = timezone.localdate()
 
+    # helper za bedževe u podtablici dopisa (ostavi ako već imaš nešto slično)
     def due_badge(dopis: Dopis, is_ball_on_us: bool):
-        """
-        Vrati (css_klasa, label) za prikaz roka.
-        Rok bojamo SAMO ako je zadnji dopis Ulazni (loptica kod nas).
-        Inače vraćamo sivu oznaku.
-        """
         if not is_ball_on_us:
             return ("bg-muted", "Loptica kod njih")
-
         days = dopis.days_to_due
         if days is None:
             return ("", "—")
@@ -54,15 +74,13 @@ def dogadjaj_list(request: HttpRequest):
 
     rows = []
     for d in dogadjaji:
-        # zadnji dopis prema 'poslano' (ako isti dan, po created_at)
         last = d.dopisi.all().order_by("-poslano", "-created_at").first()
-        ball_on_us = bool(last and last.vrsta == "incoming")  # Ulazno ⇒ na nama loptica
+        ball_on_us = bool(last and last.vrsta == "incoming")  # Ulazno ⇒ na nama
 
-        # ⬇️ NOVO: odredi klasu boje cijelog događaja (red u tablici)
+        # Boja cijelog reda (što smo ranije dogovorili)
         event_cls = ""
         if ball_on_us and last and getattr(last, "razuman_rok", None):
             rok = last.razuman_rok
-            # podrži i DateTimeField i DateField
             if isinstance(rok, datetime):
                 rok_date = timezone.localdate(rok)
             else:
@@ -78,18 +96,25 @@ def dogadjaj_list(request: HttpRequest):
             cls, label = due_badge(dp, ball_on_us)
             dopisi_rows.append((dp, cls, label))
 
-        # ⬇️ rows sada nosi i event_cls
         rows.append((d, dopisi_rows, ball_on_us, last, event_cls))
 
     return render(
         request,
         "evidencija/dogadjaj_list.html",
-        {"rows": rows, "today": today, "sort": sort, "d_sort": d_sort},
+        {
+            "rows": rows,
+            "today": today,
+            "sort": sort,
+            "d_sort": d_sort,
+            "gradiliste": gradiliste,  # ⬅ u templateu sad imaš {{ gradiliste }}
+        },
     )
 
 
-def dogadjaj_detail(request, pk: int):
-    d = get_object_or_404(Dogadjaj, pk=pk)
+def dogadjaj_detail(request, gradiliste_id, pk: int):
+    """Detalj događaja unutar odabranog gradilišta."""
+    gradiliste = get_object_or_404(Gradiliste, pk=gradiliste_id)
+    d = get_object_or_404(Dogadjaj, pk=pk, gradiliste=gradiliste)
 
     last = d.dopisi.all().order_by("-poslano", "-created_at").first()
     ball_on_us = bool(last and last.vrsta == "incoming")
@@ -122,9 +147,9 @@ def dogadjaj_detail(request, pk: int):
             "today": timezone.localdate(),
             "ball_on_us": ball_on_us,
             "last": last,
+            "gradiliste": gradiliste,  # ⬅ da URL-ovi u templateu imaju ID gradilišta
         },
     )
-
 
 # ---------- FORME (bez admina) ----------
 def dogadjaj_create(request):

@@ -7,6 +7,19 @@ from django.utils import timezone  # koristimo Django-ov timezone
 def default_razuman_rok():
     return timezone.localdate() + timedelta(days=7)
 
+class Gradiliste(models.Model):
+    naziv = models.CharField("Naziv gradilišta", max_length=200, unique=True)
+    lokacija = models.CharField("Lokacija", max_length=200, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["naziv"]
+        verbose_name = "Gradilište"
+        verbose_name_plural = "Gradilišta"
+
+    def __str__(self):
+        return self.naziv
+
 class Dogadjaj(models.Model):
     RADNJA_CHOICES = [
         ('zzi','Zahtjev za informacijom (ZZI)'),
@@ -22,6 +35,10 @@ class Dogadjaj(models.Model):
     opis = models.TextField("Opis", blank=True)
     datum = models.DateField("Datum događaja", default=timezone.localdate)
     preporucena_radnja = models.CharField("Preporučena radnja", max_length=20, choices=RADNJA_CHOICES)
+    gradiliste = models.ForeignKey(
+        "Gradiliste", on_delete=models.CASCADE, related_name="dogadjaji",
+        null=True, blank=True
+    )
 
     class Meta:
         verbose_name = "Događaj"

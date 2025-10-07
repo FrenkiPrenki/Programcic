@@ -1,5 +1,5 @@
 from django import forms
-from .models import Dogadjaj, Dopis
+from .models import Dogadjaj, Dopis, Gradiliste
 
 # HTML5 "date" input (prikazuje kalendar u browseru)
 class DateInput(forms.DateInput):
@@ -24,3 +24,8 @@ class DopisForm(forms.ModelForm):
             "poslano": DateInput(),
             "razuman_rok": DateInput(),
         }
+
+class GradilisteForm(forms.ModelForm):
+    class Meta:
+        model = Gradiliste
+        fields = ["naziv", "lokacija"]

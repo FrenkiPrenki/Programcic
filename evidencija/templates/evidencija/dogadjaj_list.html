@@ -33,7 +33,7 @@
     </div>
 
     <div class="ms-auto d-flex gap-2">
-      <a class="btn btn-success" href="{% url 'dogadjaj_create' %}">+ Novi događaj</a>
+      <a class="btn btn-success" href="{% url 'dogadjaj_create' gradiliste.id %}">+ Novi događaj</a>
       <a class="btn btn-secondary" href="/admin/">Admin</a>
     </div>
   </div>
@@ -54,7 +54,7 @@
       <!-- glavni red (bojanje prema event_cls) -->
       <tr class="{{ event_cls }}">
         <td>{{ dogadjaj.broj }}</td>
-        <td><a href="{% url 'dogadjaj_detail' dogadjaj.pk %}">{{ dogadjaj.naziv }}</a></td>
+        <td><a href="{% url 'dogadjaj_detail' gradiliste.id dogadjaj.pk %}">{{ dogadjaj.naziv }}</a>
         <td>{{ dogadjaj.get_preporucena_radnja_display }}</td>
         <td>
           <div>{{ dogadjaj.datum }}</div>
@@ -63,8 +63,8 @@
         <td>
           <div class="d-flex flex-wrap gap-2">
             <button class="btn btn-sm btn-primary" onclick="toggle('d-{{ dogadjaj.id }}')">Prikaži dopise ({{ dopisi|length }})</button>
-            <a class="btn btn-sm btn-success" href="{% url 'dopis_create_for_event' dogadjaj.id %}">+ Novi dopis</a>
-            <a class="btn btn-sm btn-warning" href="{% url 'dogadjaj_update' dogadjaj.id %}">Uredi</a>
+            <a class="btn btn-sm btn-success" href="{% url 'dopis_create_for_event' gradiliste.id %}">+ Novi dopis</a>
+            <a class="btn btn-sm btn-warning" href="{% url 'dogadjaj_update' gradiliste.id dogadjaj.id %}">Uredi</a>
           </div>
         </td>
       </tr>
