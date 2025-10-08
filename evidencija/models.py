@@ -69,26 +69,30 @@ class Dopis(models.Model):
     ]
 
     dogadjaj = models.ForeignKey(Dogadjaj, on_delete=models.CASCADE, related_name="dopisi")
-    broj = models.CharField("Broj dopisa", max_length=50, blank=True)
+    broj_int = models.PositiveIntegerField("Broj dopisa (INT)", null=True, blank=True)
+    broj = models.CharField("Broj dopisa (staro)", max_length=50, blank=True)
     vrsta = models.CharField("Vrsta dopisa", max_length=20, choices=VRSTA_CHOICES, default='incoming')
-
-    # default današnji datum (koristimo timezone.localdate – sigurno za migracije)
     poslano = models.DateField("Poslano", default=timezone.localdate)
-
-    # default +7 dana (preko helper funkcije gore)
     razuman_rok = models.DateField("Razuman rok za odgovor", default=default_razuman_rok)
-
     status = models.CharField("Status", max_length=20, choices=STATUS_CHOICES, default='open')
     sadrzaj = models.TextField("Sadržaj", blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        ordering = ['razuman_rok', '-created_at']
+        # sortirajmo po novom integeru (pa tie-break po id)
+        ordering = ['broj_int', 'id']
         verbose_name = "Dopis"
         verbose_name_plural = "Dopisi"
+        # OPCIONALNO: jedinstven broj dopisa unutar događaja
+        constraints = [
+            models.UniqueConstraint(
+                fields=['dogadjaj', 'broj_int'],
+                name='uniq_dopis_broj_per_dogadjaj'
+            ),
+        ]
 
     def __str__(self):
-        return f"Dopis {self.broj or '-'} ({self.get_vrsta_display()})"
+        return f"Dopis {self.broj_int or self.broj or '-'} ({self.get_vrsta_display()})"
 
     @property
     def days_to_due(self):

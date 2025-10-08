@@ -92,7 +92,7 @@ def dogadjaj_list(request, gradiliste_id):
                 event_cls = "table-warning"
 
         dopisi_rows = []
-        for dp in d.dopisi.all().order_by("broj"):
+        for dp in d.dopisi.all().order_by('broj_int', 'id'):
             cls, label = due_badge(dp, ball_on_us)
             dopisi_rows.append((dp, cls, label))
 
@@ -134,7 +134,7 @@ def dogadjaj_detail(request, gradiliste_id, pk: int):
         return ("bg-green", f"Za {days} d")
 
     rows = []
-    for dp in d.dopisi.all().order_by("razuman_rok", "-created_at"):
+    for dp in d.dopisi.all().order_by('broj_int', 'id'):
         cls, label = due_badge(dp, ball_on_us)
         rows.append((dp, cls, label))
 

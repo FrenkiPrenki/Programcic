@@ -18,7 +18,7 @@ class DogadjajForm(forms.ModelForm):
 class DopisForm(forms.ModelForm):
     class Meta:
         model = Dopis
-        fields = ["dogadjaj", "broj", "vrsta", "poslano", "razuman_rok", "status", "sadrzaj"]
+        fields = ["broj_int", "vrsta", "poslano", "razuman_rok", "status", "sadrzaj"]
         widgets = {
             # ➜ Date pickeri za datume dopisa
             "poslano": DateInput(),
