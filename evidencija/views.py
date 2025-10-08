@@ -160,7 +160,7 @@ def dogadjaj_create(request, gradiliste_id):
             obj = form.save(commit=False)
             obj.gradiliste = gradiliste
             obj.save()
-            return redirect("dogadjaj_detail", pk=obj.pk)
+            return redirect("dogadjaj_detail", gradiliste_id=gradiliste.id, pk=obj.id)
     else:
         form = DogadjajForm()
     return render(request, "evidencija/form.html", {"title": f"Novi događaj – {gradiliste.naziv}", "form": form})
