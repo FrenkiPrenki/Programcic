@@ -92,7 +92,7 @@ def dogadjaj_list(request, gradiliste_id):
                 event_cls = "table-warning"
 
         dopisi_rows = []
-        for dp in d.dopisi.all().order_by(d_ordering, "-created_at"):
+        for dp in d.dopisi.all().order_by("broj"):
             cls, label = due_badge(dp, ball_on_us)
             dopisi_rows.append((dp, cls, label))
 
@@ -116,7 +116,7 @@ def dogadjaj_detail(request, gradiliste_id, pk: int):
     gradiliste = get_object_or_404(Gradiliste, pk=gradiliste_id)
     d = get_object_or_404(Dogadjaj, pk=pk, gradiliste=gradiliste)
 
-    last = d.dopisi.all().order_by("-poslano", "-created_at").first()
+    last = d.dopisi.all().order_by("broj").first()
     ball_on_us = bool(last and last.vrsta == "incoming")
 
     def due_badge(dopis: Dopis, is_ball_on_us: bool):
