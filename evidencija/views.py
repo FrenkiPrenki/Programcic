@@ -177,6 +177,27 @@ def dogadjaj_update(request, gradiliste_id, pk):
         form = DogadjajForm(instance=obj)
     return render(request, "evidencija/form.html", {"title": f"Uredi događaj – {gradiliste.naziv}", "form": form})
 
+def dopis_create_for_event(request, gradiliste_id, dogadjaj_id):
+    gradiliste = get_object_or_404(Gradiliste, pk=gradiliste_id)
+    dogadjaj = get_object_or_404(Dogadjaj, pk=dogadjaj_id, gradiliste=gradiliste)
+
+    if request.method == "POST":
+        form = DopisForm(request.POST)
+        if form.is_valid():
+            dopis = form.save(commit=False)
+            dopis.dogadjaj = dogadjaj   # vežemo na odabrani događaj, ignorira se što god je u formi
+            dopis.save()
+            return redirect("dogadjaj_detail", gradiliste_id=gradiliste.id, pk=dogadjaj.id)
+    else:
+        # ako tvoj DopisForm ima polje 'dogadjaj', bolje ga maknuti iz forme (exclude) ili ga ostaviti readonly
+        form = DopisForm(initial={"dogadjaj": dogadjaj})
+
+    return render(
+        request,
+        "evidencija/form.html",
+        {"title": f"Novi dopis – {dogadjaj.naziv}", "form": form},
+    )
+
 def dopis_update(request, gradiliste_id, pk):
     gradiliste = get_object_or_404(Gradiliste, pk=gradiliste_id)
     dopis = get_object_or_404(Dopis, pk=pk)
