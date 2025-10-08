@@ -63,7 +63,7 @@
         <td>
           <div class="d-flex flex-wrap gap-2">
             <button class="btn btn-sm btn-primary" onclick="toggle('d-{{ dogadjaj.id }}')">Prikaži dopise ({{ dopisi|length }})</button>
-            <a class="btn btn-sm btn-success" href="{% url 'dopis_create_for_event' gradiliste.id %}">+ Novi dopis</a>
+            <a class="btn btn-sm btn-success" href="{% url 'dopis_create_for_event' gradiliste.id dogadjaj.id %}">+ Novi dopis</a>
             <a class="btn btn-sm btn-warning" href="{% url 'dogadjaj_update' gradiliste.id dogadjaj.id %}">Uredi</a>
           </div>
         </td>
@@ -99,7 +99,7 @@
                 </td>
                 <td>{{ dopis.get_status_display }}</td>
                 <td class="text-muted">{{ dopis.sadrzaj|truncatechars:120 }}</td>
-                <td><a class="btn btn-sm btn-outline-primary" href="{% url 'dopis_update' dopis.id %}">Otvori</a></td>
+                <td><a class="btn btn-sm btn-outline-primary" href="{% url 'dopis_update' gradiliste.id dopis.id %}">Otvori</a></td>
               </tr>
               {% endfor %}
             </tbody>
