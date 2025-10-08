@@ -30,25 +30,28 @@ class Dogadjaj(models.Model):
         ('other','Ostalo'),
     ]
 
-    broj = models.PositiveIntegerField("Broj događaja", unique=True, blank=True, null=True)
+    broj = models.PositiveIntegerField("Broj događaja", blank=True, null=True)
     naziv = models.CharField("Naziv događaja", max_length=255)
     opis = models.TextField("Opis", blank=True)
     datum = models.DateField("Datum događaja", default=timezone.localdate)
     preporucena_radnja = models.CharField("Preporučena radnja", max_length=20, choices=RADNJA_CHOICES)
-    gradiliste = models.ForeignKey(
-        "Gradiliste", on_delete=models.CASCADE, related_name="dogadjaji",
-        null=True, blank=True
-    )
+    gradiliste = models.ForeignKey("Gradiliste", on_delete=models.CASCADE, related_name="dogadjaji", null=True, blank=True)
 
     class Meta:
         verbose_name = "Događaj"
         verbose_name_plural = "Događaji"
         ordering = ['broj']
+        constraints = [
+            models.UniqueConstraint(fields=['gradiliste', 'broj'], name='uniq_broj_per_gradiliste')  # ⬅ NOVO
+        ]
 
     def save(self, *args, **kwargs):
         if self.broj is None:  # ako nije ručno zadan
-            last = Dogadjaj.objects.order_by('-broj').first()
-            self.broj = 1 if not last else last.broj + 1
+            qs = Dogadjaj.objects.all()
+            if self.gradiliste_id:
+                qs = qs.filter(gradiliste_id=self.gradiliste_id)
+            last = qs.order_by('-broj').first()
+            self.broj = 1 if not last or not last.broj else last.broj + 1
         super().save(*args, **kwargs)
 
     def __str__(self):
