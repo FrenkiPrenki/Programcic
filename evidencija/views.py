@@ -2,7 +2,7 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.urls import reverse
 from django.utils import timezone
 from django.http import HttpRequest
-from .models import Dogadjaj, Dopis, Gradiliste
+from .models import Gradiliste, Dogadjaj, Dopis
 from .forms import DogadjajForm, DopisForm, GradilisteForm
 from datetime import date, datetime
 
@@ -152,61 +152,42 @@ def dogadjaj_detail(request, gradiliste_id, pk: int):
     )
 
 # ---------- FORME (bez admina) ----------
-def dogadjaj_create(request):
+def dogadjaj_create(request, gradiliste_id):
+    gradiliste = get_object_or_404(Gradiliste, pk=gradiliste_id)
     if request.method == "POST":
         form = DogadjajForm(request.POST)
         if form.is_valid():
-            d = form.save()
-            return redirect("dogadjaj_detail", pk=d.pk)
+            obj = form.save(commit=False)
+            obj.gradiliste = gradiliste
+            obj.save()
+            return redirect("dogadjaj_detail", pk=obj.pk)
     else:
         form = DogadjajForm()
-    return render(request, "evidencija/form.html", {"form": form, "title": "Novi događaj"})
+    return render(request, "evidencija/form.html", {"title": f"Novi događaj – {gradiliste.naziv}", "form": form})
 
-
-def dogadjaj_update(request, pk: int):
-    d = get_object_or_404(Dogadjaj, pk=pk)
+def dogadjaj_update(request, gradiliste_id, pk):
+    gradiliste = get_object_or_404(Gradiliste, pk=gradiliste_id)
+    obj = get_object_or_404(Dogadjaj, pk=pk, gradiliste=gradiliste)
     if request.method == "POST":
-        form = DogadjajForm(request.POST, instance=d)
+        form = DogadjajForm(request.POST, instance=obj)
         if form.is_valid():
             form.save()
-            return redirect("dogadjaj_detail", pk=d.pk)
+            return redirect("dogadjaj_list", gradiliste_id=gradiliste.id)
     else:
-        form = DogadjajForm(instance=d)
-    return render(
-        request,
-        "evidencija/form.html",
-        {"form": form, "title": f"Uredi događaj #{d.broj if d.broj is not None else d.pk}"},
-    )
+        form = DogadjajForm(instance=obj)
+    return render(request, "evidencija/form.html", {"title": f"Uredi događaj – {gradiliste.naziv}", "form": form})
 
-
-def dopis_create(request, dogadjaj_id: int | None = None):
-    initial = {}
-    if dogadjaj_id is not None:
-        initial["dogadjaj"] = get_object_or_404(Dogadjaj, pk=dogadjaj_id)
-
+def dopis_update(request, gradiliste_id, pk):
+    gradiliste = get_object_or_404(Gradiliste, pk=gradiliste_id)
+    dopis = get_object_or_404(Dopis, pk=pk)
+    # sigurnosna provjera da dopis pripada gradilištu:
+    if dopis.dogadjaj.gradiliste_id != gradiliste.id:
+        return redirect("dogadjaj_list", gradiliste_id=gradiliste.id)
     if request.method == "POST":
-        form = DopisForm(request.POST, initial=initial)
-        if form.is_valid():
-            dp = form.save()
-            return redirect("dogadjaj_detail", pk=dp.dogadjaj.pk)
-    else:
-        form = DopisForm(initial=initial)
-
-    return render(request, "evidencija/form.html", {"form": form, "title": "Novi dopis"})
-
-
-def dopis_update(request, pk: int):
-    dp = get_object_or_404(Dopis, pk=pk)
-    if request.method == "POST":
-        form = DopisForm(request.POST, instance=dp)
+        form = DopisForm(request.POST, instance=dopis)
         if form.is_valid():
             form.save()
-            return redirect("dogadjaj_detail", pk=dp.dogadjaj.pk)
+            return redirect("dogadjaj_list", gradiliste_id=gradiliste.id)
     else:
-        form = DopisForm(instance=dp)
-    title_suffix = f" {dp.broj}" if dp.broj else ""
-    return render(
-        request,
-        "evidencija/form.html",
-        {"form": form, "title": f"Uredi dopis{title_suffix}"},
-    )
+        form = DopisForm(instance=dopis)
+    return render(request, "evidencija/form.html", {"title": f"Uredi dopis – {gradiliste.naziv}", "form": form})
