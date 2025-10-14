@@ -5,6 +5,29 @@ from django.http import HttpRequest
 from .models import Gradiliste, Dogadjaj, Dopis
 from .forms import DogadjajForm, DopisForm, GradilisteForm
 from datetime import date, datetime
+from django.db.models import Min, Max, Prefetch
+
+def due_badge(dopis, ball_on_us, dogadjaj_status=None):
+    """
+    Vraća (cls, label) za prikaz roka dopisa.
+    - Ako je događaj zatvoren -> nema 'kasni'
+    - Ako dopis ima status i nije 'open' -> nema 'kasni'
+    - Ako nije na nama potez ili nema roka -> nema 'kasni'
+    """
+    if dogadjaj_status == "closed":
+        return "bg-muted", "—"
+    if hasattr(dopis, "status") and dopis.status in ("answered", "closed"):
+        return "bg-muted", "—"
+    if not ball_on_us or not getattr(dopis, "razuman_rok", None):
+        return "bg-muted", "—"
+
+    days = (dopis.razuman_rok - timezone.localdate()).days
+    if days < 0:
+        return "bg-red", f"Kasni {abs(days)} d"
+    elif days <= 14:
+        return "bg-yellow", f"{days} d do roka"
+    else:
+        return "bg-green", f"{days} d do roka"
 
 def gradiliste_list(request):
     gradilista = Gradiliste.objects.all()
@@ -23,133 +46,69 @@ def gradiliste_create(request):
 from datetime import datetime  # ako već nije uvezeno
 
 def dogadjaj_list(request, gradiliste_id):
-    """Lista događaja filtrirana po odabranom gradilištu."""
-    gradiliste = get_object_or_404(Gradiliste, pk=gradiliste_id)
+    g = get_object_or_404(Gradiliste, pk=gradiliste_id)
 
-    # ----- tvoje postojeće sortiranje (ostavi kako imaš) -----
-    sort = request.GET.get("sort", "broj_asc")
-    ordering_map = {
-        "broj_asc": "broj",
-        "broj_desc": "-broj",
-        "datum_desc": "-datum",
-        "datum_asc": "datum",
-    }
-    ordering = ordering_map.get(sort, "broj")
-
-    d_sort = request.GET.get("d_sort", "rok_asc")
-    d_ordering_map = {
-        "broj_asc": "broj",
-        "broj_desc": "-broj",
-        "poslano_asc": "poslano",
-        "poslano_desc": "-poslano",
-        "rok_asc": "razuman_rok",
-        "rok_desc": "-razuman_rok",
-    }
-    d_ordering = d_ordering_map.get(d_sort, "razuman_rok")
-
-    # ⬇⬇⬇ NAJVAŽNIJE: filtriramo po gradilištu
-    dogadjaji = (
-        Dogadjaj.objects
-        .filter(gradiliste=gradiliste)
-        .prefetch_related("dopisi")
-        .order_by(ordering)
-    )
-
-    today = timezone.localdate()
-
-    # helper za bedževe u podtablici dopisa (ostavi ako već imaš nešto slično)
-    def due_badge(dopis: Dopis, is_ball_on_us: bool):
-        if not is_ball_on_us:
-            return ("bg-muted", "Loptica kod njih")
-        days = dopis.days_to_due
-        if days is None:
-            return ("", "—")
-        if days < 0:
-            return ("bg-red", f"Kasni {abs(days)} d")
-        if days == 0:
-            return ("bg-yellow", "Rok danas")
-        if days <= 2:
-            return ("bg-yellow", f"Za {days} d")
-        return ("bg-green", f"Za {days} d")
+    # Učitaj sve događaje za gradilište (možeš dodati ordering po potrebi)
+    dogadjaji = Dogadjaj.objects.filter(gradiliste=g).order_by("broj", "id")
 
     rows = []
     for d in dogadjaji:
-        last = d.dopisi.all().order_by("-poslano", "-created_at").first()
-        ball_on_us = bool(last and last.vrsta == "incoming")  # Ulazno ⇒ na nama
+        # zadnji dopis i tko je na potezu
+        last = d.dopisi.order_by("-poslano", "-id").first()
+        ball_on_us = False
+        if last:
+            ball_on_us = (getattr(last, "vrsta", None) == "incoming")
 
-        # Boja cijelog reda (što smo ranije dogovorili)
+        # dopisi za prikaz u "skrivenoj" podtablici
+        dopisi = []
+        for dp in d.dopisi.all().order_by("broj", "id"):
+            cls, label = due_badge(dp, ball_on_us, d.status)
+            dopisi.append((dp, cls, label))
+
+        # klasa za bojanje reda događaja (samo ako nije zatvoren)
         event_cls = ""
-        if ball_on_us and last and getattr(last, "razuman_rok", None):
-            rok = last.razuman_rok
-            if isinstance(rok, datetime):
-                rok_date = timezone.localdate(rok)
+        if d.status != "closed" and ball_on_us and last and getattr(last, "razuman_rok", None):
+            days = (last.razuman_rok - timezone.localdate()).days
+            if days < 0:
+                event_cls = "table-danger"   # crveno
+            elif days <= 14:
+                event_cls = "table-warning"  # narančasto/žuto
             else:
-                rok_date = rok
-            delta_days = (rok_date - today).days
-            if delta_days < 0:
-                event_cls = "table-danger"
-            elif delta_days <= 14:
-                event_cls = "table-warning"
+                event_cls = ""               # bez boje
 
-        dopisi_rows = []
-        for dp in d.dopisi.all().order_by('broj_int', 'id'):
-            cls, label = due_badge(dp, ball_on_us)
-            dopisi_rows.append((dp, cls, label))
+        rows.append((d, dopisi, ball_on_us, last, event_cls))
 
-        rows.append((d, dopisi_rows, ball_on_us, last, event_cls))
+    ctx = {
+        "gradiliste": g,
+        "rows": rows,
+        "today": timezone.localdate(),
+        # zadrži i postojeće varijable za sort ako ih koristiš (sort, d_sort, …)
+    }
+    return render(request, "evidencija/dogadjaj_list.html", ctx)
 
-    return render(
-        request,
-        "evidencija/dogadjaj_list.html",
-        {
-            "rows": rows,
-            "today": today,
-            "sort": sort,
-            "d_sort": d_sort,
-            "gradiliste": gradiliste,  # ⬅ u templateu sad imaš {{ gradiliste }}
-        },
-    )
+def dogadjaj_detail(request, gradiliste_id, pk):
+    d = get_object_or_404(Dogadjaj, pk=pk, gradiliste_id=gradiliste_id)
 
+    # zadnji dopis i tko je na potezu
+    last = d.dopisi.order_by("-poslano", "-id").first()
+    ball_on_us = False
+    if last:
+        # ako je zadnji bio 'incoming' (ulazni) -> na nama je potez
+        ball_on_us = (getattr(last, "vrsta", None) == "incoming")
 
-def dogadjaj_detail(request, gradiliste_id, pk: int):
-    """Detalj događaja unutar odabranog gradilišta."""
-    gradiliste = get_object_or_404(Gradiliste, pk=gradiliste_id)
-    d = get_object_or_404(Dogadjaj, pk=pk, gradiliste=gradiliste)
-
-    last = d.dopisi.all().order_by("broj").first()
-    ball_on_us = bool(last and last.vrsta == "incoming")
-
-    def due_badge(dopis: Dopis, is_ball_on_us: bool):
-        if not is_ball_on_us:
-            return ("bg-muted", "Loptica kod njih")
-        days = dopis.days_to_due
-        if days is None:
-            return ("", "—")
-        if days < 0:
-            return ("bg-red", f"Kasni {abs(days)} d")
-        if days == 0:
-            return ("bg-yellow", "Rok danas")
-        if days <= 2:
-            return ("bg-yellow", f"Za {days} d")
-        return ("bg-green", f"Za {days} d")
-
+    # složi redove za tablicu dopisa: (dopis, cls, label)
     rows = []
-    for dp in d.dopisi.all().order_by('broj_int', 'id'):
-        cls, label = due_badge(dp, ball_on_us)
+    for dp in d.dopisi.all().order_by("broj", "id"):  # prilagodi ako sortiraš drugačije
+        cls, label = due_badge(dp, ball_on_us, d.status)
         rows.append((dp, cls, label))
 
-    return render(
-        request,
-        "evidencija/dogadjaj_detail.html",
-        {
-            "dogadjaj": d,
-            "rows": rows,
-            "today": timezone.localdate(),
-            "ball_on_us": ball_on_us,
-            "last": last,
-            "gradiliste": gradiliste,  # ⬅ da URL-ovi u templateu imaju ID gradilišta
-        },
-    )
+    ctx = {
+        "dogadjaj": d,
+        "ball_on_us": ball_on_us,
+        "last": last,
+        "rows": rows,
+    }
+    return render(request, "evidencija/dogadjaj_detail.html", ctx)
 
 # ---------- FORME (bez admina) ----------
 def dogadjaj_create(request, gradiliste_id):
