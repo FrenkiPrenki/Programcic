@@ -50,9 +50,7 @@
       </tr>
     </thead>
     <tbody>
-      {% for dogadjaj, dopisi, ball_on_us, last, event_cls in rows %}
-      <!-- glavni red (bojanje prema event_cls) -->
-      <tr class="{{ event_cls }}">
+      {% for dogadjaj, dopisi, ball_on_us, last in rows %}
         <td>{{ dogadjaj.broj }}</td>
         <td><a href="{% url 'dogadjaj_detail' gradiliste.id dogadjaj.pk %}">{{ dogadjaj.naziv }}</a>
         <td>{{ dogadjaj.get_preporucena_radnja_display }}</td>

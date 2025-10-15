@@ -55,60 +55,45 @@ def dogadjaj_list(request, gradiliste_id):
     for d in dogadjaji:
         # zadnji dopis i tko je na potezu
         last = d.dopisi.order_by("-poslano", "-id").first()
-        ball_on_us = False
-        if last:
-            ball_on_us = (getattr(last, "vrsta", None) == "incoming")
+        ball_on_us = bool(last and getattr(last, "vrsta", None) == "incoming")
 
-        # dopisi za prikaz u "skrivenoj" podtablici
+        d_status = getattr(d, "status", None)  # <-- NEW
+
         dopisi = []
         for dp in d.dopisi.all().order_by("broj", "id"):
-            cls, label = due_badge(dp, ball_on_us, d.status)
+            cls, label = due_badge(dp, ball_on_us, d_status)  # <-- pass status
             dopisi.append((dp, cls, label))
 
-        # klasa za bojanje reda događaja (samo ako nije zatvoren)
-        event_cls = ""
-        if d.status != "closed" and ball_on_us and last and getattr(last, "razuman_rok", None):
-            days = (last.razuman_rok - timezone.localdate()).days
-            if days < 0:
-                event_cls = "table-danger"   # crveno
-            elif days <= 14:
-                event_cls = "table-warning"  # narančasto/žuto
-            else:
-                event_cls = ""               # bez boje
+        # ako više ne koristiš event_cls, slobodno ga izbaci iz rows/contexta
+        rows.append((d, dopisi, ball_on_us, last))  # bez event_cls
 
-        rows.append((d, dopisi, ball_on_us, last, event_cls))
-
-    ctx = {
+    return render(request, "evidencija/dogadjaj_list.html", {
         "gradiliste": g,
         "rows": rows,
         "today": timezone.localdate(),
-        # zadrži i postojeće varijable za sort ako ih koristiš (sort, d_sort, …)
-    }
-    return render(request, "evidencija/dogadjaj_list.html", ctx)
+    })
 
 def dogadjaj_detail(request, gradiliste_id, pk):
     d = get_object_or_404(Dogadjaj, pk=pk, gradiliste_id=gradiliste_id)
+    d_status = getattr(d, "status", None)
 
     # zadnji dopis i tko je na potezu
     last = d.dopisi.order_by("-poslano", "-id").first()
-    ball_on_us = False
-    if last:
-        # ako je zadnji bio 'incoming' (ulazni) -> na nama je potez
-        ball_on_us = (getattr(last, "vrsta", None) == "incoming")
+    ball_on_us = bool(last and getattr(last, "vrsta", None) == "incoming")
 
-    # složi redove za tablicu dopisa: (dopis, cls, label)
+    d_status = getattr(d, "status", None)  # <-- NEW: sigurno čitanje statusa
+
     rows = []
-    for dp in d.dopisi.all().order_by("broj", "id"):  # prilagodi ako sortiraš drugačije
-        cls, label = due_badge(dp, ball_on_us, d.status)
+    for dp in d.dopisi.all().order_by("broj", "id"):  # prilagodi ordering po želji
+        cls, label = due_badge(dp, ball_on_us, d_status)  # <-- pass status
         rows.append((dp, cls, label))
 
-    ctx = {
+    return render(request, "evidencija/dogadjaj_detail.html", {
         "dogadjaj": d,
         "ball_on_us": ball_on_us,
         "last": last,
         "rows": rows,
-    }
-    return render(request, "evidencija/dogadjaj_detail.html", ctx)
+    })
 
 # ---------- FORME (bez admina) ----------
 def dogadjaj_create(request, gradiliste_id):
