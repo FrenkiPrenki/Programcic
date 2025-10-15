@@ -71,18 +71,7 @@
         <td>{{ dopis.poslano|default:"—" }}</td>
         <td>
           {% if dopis.razuman_rok %}
-            {# mapiramo naše klase na Bootstrap badge boje #}
-            {% if "red" in cls %}
-              <span class="badge text-bg-danger">{{ label }}</span>
-            {% elif "yellow" in cls %}
-              <span class="badge text-bg-warning">{{ label }}</span>
-            {% elif "green" in cls %}
-              <span class="badge text-bg-success">{{ label }}</span>
-            {% elif "muted" in cls %}
-              <span class="badge text-bg-secondary">{{ label }}</span>
-            {% else %}
-              <span class="badge text-bg-light text-dark">{{ label }}</span>
-            {% endif %}
+            <span class="badge {{ cls }}">{{ label }}</span>
             <div class="text-muted small mt-1">{{ dopis.razuman_rok }}</div>
           {% else %}
             —

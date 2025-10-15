@@ -7,27 +7,33 @@ from .forms import DogadjajForm, DopisForm, GradilisteForm
 from datetime import date, datetime
 from django.db.models import Min, Max, Prefetch
 
-def due_badge(dopis, ball_on_us, dogadjaj_status=None):
-    """
-    Vraća (cls, label) za prikaz roka dopisa.
-    - Ako je događaj zatvoren -> nema 'kasni'
-    - Ako dopis ima status i nije 'open' -> nema 'kasni'
-    - Ako nije na nama potez ili nema roka -> nema 'kasni'
-    """
-    if dogadjaj_status == "closed":
-        return "bg-muted", "—"
-    if hasattr(dopis, "status") and dopis.status in ("answered", "closed"):
-        return "bg-muted", "—"
-    if not ball_on_us or not getattr(dopis, "razuman_rok", None):
-        return "bg-muted", "—"
+from django.utils import timezone
 
+def due_badge(dopis, _ball_on_us_ignored, dogadjaj_status=None):
+    """
+    Vrati (bootstrap_klasa, label) za badge.
+    Klasa je jedna od: text-bg-danger | text-bg-warning | text-bg-success | text-bg-secondary
+    """
+    # Dogadjaj zatvoren -> sivo
+    if dogadjaj_status == "closed":
+        return "text-bg-secondary", "—"
+
+    # Ako dopis još ima svoje status polje i nije 'open' -> sivo
+    if hasattr(dopis, "status") and getattr(dopis, "status", "open") in ("answered", "closed"):
+        return "text-bg-secondary", "—"
+
+    # Ako nema roka ili nije ulazni -> sivo
+    if getattr(dopis, "vrsta", None) != "incoming" or not getattr(dopis, "razuman_rok", None):
+        return "text-bg-secondary", "—"
+
+    # Izračun roka
     days = (dopis.razuman_rok - timezone.localdate()).days
     if days < 0:
-        return "bg-red", f"Kasni {abs(days)} d"
+        return "text-bg-danger", f"Kasni {abs(days)} d"
     elif days <= 14:
-        return "bg-yellow", f"{days} d do roka"
+        return "text-bg-warning", f"{days} d do roka"
     else:
-        return "bg-green", f"{days} d do roka"
+        return "text-bg-success", f"{days} d do roka"
 
 def gradiliste_list(request):
     gradilista = Gradiliste.objects.all()
@@ -57,7 +63,8 @@ def dogadjaj_list(request, gradiliste_id):
         last = d.dopisi.order_by("-poslano", "-id").first()
         ball_on_us = bool(last and getattr(last, "vrsta", None) == "incoming")
 
-        d_status = getattr(d, "status", None)  # <-- NEW
+        d_status = getattr(d, "status", None)
+        cls, label = due_badge(dp, ball_on_us, d_status)
 
         dopisi = []
         for dp in d.dopisi.all().order_by("broj", "id"):
@@ -81,7 +88,8 @@ def dogadjaj_detail(request, gradiliste_id, pk):
     last = d.dopisi.order_by("-poslano", "-id").first()
     ball_on_us = bool(last and getattr(last, "vrsta", None) == "incoming")
 
-    d_status = getattr(d, "status", None)  # <-- NEW: sigurno čitanje statusa
+    d_status = getattr(d, "status", None)
+    cls, label = due_badge(dp, ball_on_us, d_status)
 
     rows = []
     for dp in d.dopisi.all().order_by("broj", "id"):  # prilagodi ordering po želji
