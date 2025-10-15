@@ -90,6 +90,7 @@ def dogadjaj_detail(request, gradiliste_id, pk):
 
     return render(request, "evidencija/dogadjaj_detail.html", {
         "dogadjaj": d,
+        "gradiliste": d.gradiliste,
         "ball_on_us": ball_on_us,
         "last": last,
         "rows": rows,
