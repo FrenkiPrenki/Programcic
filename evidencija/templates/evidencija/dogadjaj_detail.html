@@ -55,13 +55,22 @@
     </thead>
     <tbody>
       {% for dopis, cls, label in rows %}
-      <tr>
+      <tr
+        {% if cls == 'bg-red' %}
+          class="table-danger"
+        {% elif cls == 'bg-yellow' %}
+          class="table-warning"
+        {% elif cls == 'bg-green' %}
+          class="table-success"
+        {% elif cls == 'bg-muted' %}
+          class="table-secondary"
+        {% endif %}
+      >
         <td>{{ dopis.broj|default:"—" }}</td>
         <td>{{ dopis.get_vrsta_display }}</td>
         <td>{{ dopis.poslano|default:"—" }}</td>
         <td>
           {% if dopis.razuman_rok %}
-            {# mapiramo naše klase na Bootstrap badge boje #}
             {% if cls == 'bg-red' %}
               <span class="badge text-bg-danger">{{ label }}</span>
             {% elif cls == 'bg-yellow' %}
@@ -89,6 +98,5 @@
       {% endfor %}
     </tbody>
   </table>
-
 </body>
 </html>
