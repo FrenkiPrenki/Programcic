@@ -56,13 +56,13 @@
     <tbody>
       {% for dopis, cls, label in rows %}
       <tr
-        {% if cls == 'bg-red' %}
+        {% if cls == 'text-bg-danger' %}
           class="table-danger"
-        {% elif cls == 'bg-yellow' %}
+        {% elif cls == 'text-bg-warning' %}
           class="table-warning"
-        {% elif cls == 'bg-green' %}
+        {% elif cls == 'text-bg-success' %}
           class="table-success"
-        {% elif cls == 'bg-muted' %}
+        {% elif cls == 'text-bg-secondary' %}
           class="table-secondary"
         {% endif %}
       >
