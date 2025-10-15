@@ -64,7 +64,6 @@ def dogadjaj_list(request, gradiliste_id):
         ball_on_us = bool(last and getattr(last, "vrsta", None) == "incoming")
 
         d_status = getattr(d, "status", None)
-        cls, label = due_badge(dp, ball_on_us, d_status)
 
         dopisi = []
         for dp in d.dopisi.all().order_by("broj", "id"):
@@ -89,7 +88,6 @@ def dogadjaj_detail(request, gradiliste_id, pk):
     ball_on_us = bool(last and getattr(last, "vrsta", None) == "incoming")
 
     d_status = getattr(d, "status", None)
-    cls, label = due_badge(dp, ball_on_us, d_status)
 
     rows = []
     for dp in d.dopisi.all().order_by("broj", "id"):  # prilagodi ordering po želji
