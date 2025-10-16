@@ -75,8 +75,9 @@ def dogadjaj_list(request, gradiliste_id):
 
         if (
             last
-            and d_status == "open"                       # ← bojamo SAMO ako je događaj otvoren
-            and getattr(last, "vrsta", None) == "incoming"
+            and d_status == "open"                                   # događaj nije zatvoren
+            and getattr(last, "vrsta", None) == "incoming"           # zadnji dopis je ulazni
+            and getattr(last, "status", "open") == "open"            # zadnji dopis NIJE zatvoren/odgovoren
             and getattr(last, "razuman_rok", None)
         ):
             days = (last.razuman_rok - timezone.localdate()).days
