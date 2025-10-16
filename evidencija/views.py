@@ -62,16 +62,25 @@ def dogadjaj_list(request, gradiliste_id):
         # zadnji dopis i tko je na potezu
         last = d.dopisi.order_by("-poslano", "-id").first()
         ball_on_us = bool(last and getattr(last, "vrsta", None) == "incoming")
-
         d_status = getattr(d, "status", None)
 
         dopisi = []
         for dp in d.dopisi.all().order_by("broj", "id"):
             cls, label = due_badge(dp, ball_on_us, d_status)  # <-- pass status
             dopisi.append((dp, cls, label))
+         
+         # BOJANJE GLAVNOG REDA DOGAĐAJA — SAMO PO ZADNJEM DOPISU
+        event_cls = ""
+        if last and d_status != "closed" and getattr(last, "vrsta", None) == "incoming" and getattr(last, "razuman_rok", None):
+            days = (last.razuman_rok - timezone.localdate()).days
+            if days < 0:
+                event_cls = "table-danger"   # CRVENO: rok prošao
+            elif days <= 14:
+                event_cls = "table-warning"  # ŽUTO: ≤14 dana do roka
+            else:
+                event_cls = ""               # Bez boje
 
-        # ako više ne koristiš event_cls, slobodno ga izbaci iz rows/contexta
-        rows.append((d, dopisi, ball_on_us, last))  # bez event_cls
+        rows.append((d, dopisi, ball_on_us, last, event_cls))
 
     return render(request, "evidencija/dogadjaj_list.html", {
         "gradiliste": g,

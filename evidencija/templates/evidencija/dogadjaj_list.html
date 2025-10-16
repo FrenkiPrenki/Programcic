@@ -50,19 +50,34 @@
       </tr>
     </thead>
     <tbody>
-      {% for dogadjaj, dopisi, ball_on_us, last in rows %}
+      {% for dogadjaj, dopisi, ball_on_us, last, event_cls in rows %}
+      <tr class="{{ event_cls }}">
         <td>{{ dogadjaj.broj }}</td>
-        <td><a href="{% url 'dogadjaj_detail' gradiliste.id dogadjaj.pk %}">{{ dogadjaj.naziv }}</a>
+        <td>
+          <a href="{% url 'dogadjaj_detail' gradiliste.id dogadjaj.pk %}">
+            {{ dogadjaj.naziv }}
+          </a>
+        </td>
         <td>{{ dogadjaj.get_preporucena_radnja_display }}</td>
         <td>
           <div>{{ dogadjaj.datum }}</div>
-          <div class="small text-muted">Zadnji dopis: {{ last.poslano|default:"—" }}</div>
+          <div class="small text-muted">
+            Zadnji dopis: {{ last.poslano|default:"—" }}
+          </div>
         </td>
         <td>
           <div class="d-flex flex-wrap gap-2">
-            <button class="btn btn-sm btn-primary" onclick="toggle('d-{{ dogadjaj.id }}')">Prikaži dopise ({{ dopisi|length }})</button>
-            <a class="btn btn-sm btn-success" href="{% url 'dopis_create_for_event' gradiliste.id dogadjaj.id %}">+ Novi dopis</a>
-            <a class="btn btn-sm btn-warning" href="{% url 'dogadjaj_update' gradiliste.id dogadjaj.id %}">Uredi</a>
+            <button class="btn btn-sm btn-primary" onclick="toggle('d-{{ dogadjaj.id }}')">
+              Prikaži dopise ({{ dopisi|length }})
+            </button>
+            <a class="btn btn-sm btn-success"
+              href="{% url 'dopis_create_for_event' gradiliste.id dogadjaj.id %}">
+              + Novi dopis
+            </a>
+            <a class="btn btn-sm btn-warning"
+              href="{% url 'dogadjaj_update' gradiliste.id dogadjaj.id %}">
+              Uredi
+            </a>
           </div>
         </td>
       </tr>
