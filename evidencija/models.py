@@ -2,6 +2,8 @@ from django.db import models
 from django.contrib.auth.models import User
 from datetime import timedelta
 from django.utils import timezone  # koristimo Django-ov timezone
+from django.core.exceptions import ValidationError
+from django.db.models import Q
 
 # helper za default rok (+7 dana) – ovo se može serijalizirati u migracijama
 def default_razuman_rok():
@@ -67,11 +69,23 @@ class Dopis(models.Model):
         ('incoming', 'Ulazno'),
         ('outgoing', 'Izlazno'),
     ]
+    KATEGORIJA_CHOICES = [
+        ('', '—'),  # prazno je dopušteno
+        ('zzi', 'ZZI'),
+        ('potrazivanje', 'Potraživanje'),
+        ('prijedlog', 'Prijedlog'),
+        ('uputa_inzenjera', 'Uputa Inženjera'),
+        ('poboljsanje', 'Poboljšanje'),
+        ('obavijest', 'Obavijest'),
+        ('dopis', 'Dopis'),
+    ]
 
     dogadjaj = models.ForeignKey(Dogadjaj, on_delete=models.CASCADE, related_name="dopisi")
     broj_int = models.PositiveIntegerField("Broj dopisa (INT)", null=True, blank=True)
     broj = models.CharField("Broj dopisa (staro)", max_length=50, blank=True)
     vrsta = models.CharField("Vrsta dopisa", max_length=20, choices=VRSTA_CHOICES, default='incoming')
+    kategorija = models.CharField("Vrsta dopisa", max_length=30, choices=KATEGORIJA_CHOICES, blank=True, default='')
+    rb_po_kategoriji = models.PositiveIntegerField("Redni broj (po vrsti dopisa)", null=True, blank=True)
     poslano = models.DateField("Poslano", default=timezone.localdate)
     razuman_rok = models.DateField("Razuman rok za odgovor", default=default_razuman_rok)
     status = models.CharField("Status", max_length=20, choices=STATUS_CHOICES, default='open')
@@ -80,26 +94,39 @@ class Dopis(models.Model):
 
     class Meta:
         # sortirajmo po novom integeru (pa tie-break po id)
-        ordering = ['broj_int', 'id']
+        ordering = ["kategorija", "rb_po_kategoriji", "id"]
         verbose_name = "Dopis"
         verbose_name_plural = "Dopisi"
-        # OPCIONALNO: jedinstven broj dopisa unutar događaja
-        constraints = [
-            models.UniqueConstraint(
-                fields=['dogadjaj', 'broj_int'],
-                name='uniq_dopis_broj_per_dogadjaj'
-            ),
-        ]
-
+       
     def __str__(self):
-        return f"Dopis {self.broj_int or self.broj or '-'} ({self.get_vrsta_display()})"
+        kat = dict(self.KATEGORIJA_CHOICES).get(self.kategorija, '—')
+        if self.kategorija and self.rb_po_kategoriji:
+            return f"{kat} {self.rb_po_kategoriji} – {self.get_vrsta_display()}"
+        return f"Dopis – {self.get_vrsta_display()}"
+    
+    def clean(self):
+        super().clean()
+        # Ako ima i kategoriju i broj, provjeri jedinstvenost unutar *istog gradilišta* i *iste kategorije*
+        if self.kategorija and self.rb_po_kategoriji:
+            gradiliste_id = self.dogadjaj.gradiliste_id if self.dogadjaj_id else None
+            if gradiliste_id:
+                qs = Dopis.objects.filter(
+                    dogadjaj__gradiliste_id=gradiliste_id,
+                    kategorija=self.kategorija,
+                    rb_po_kategoriji=self.rb_po_kategoriji,
+                )
+                if self.pk:
+                    qs = qs.exclude(pk=self.pk)
+                if qs.exists():
+                    raise ValidationError({
+                        "rb_po_kategoriji": "Taj broj već postoji za ovu vrstu dopisa na ovom gradilištu."
+                    })
 
-    @property
-    def days_to_due(self):
-        if self.razuman_rok:
-            return (self.razuman_rok - timezone.localdate()).days
-        return None
-
+    #@property
+    #def days_to_due(self):
+    #    if self.razuman_rok:
+    #        return (self.razuman_rok - timezone.localdate()).days
+    #    return None
 
 class Biljeska(models.Model):
     dopis = models.ForeignKey(Dopis, on_delete=models.CASCADE, related_name='biljeske')

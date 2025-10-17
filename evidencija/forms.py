@@ -18,11 +18,15 @@ class DogadjajForm(forms.ModelForm):
 class DopisForm(forms.ModelForm):
     class Meta:
         model = Dopis
-        fields = ["broj_int", "vrsta", "poslano", "razuman_rok", "status", "sadrzaj"]
+        fields = ["broj_int", "vrsta", "kategorija", "rb_po_kategoriji", "poslano", "razuman_rok", "status", "sadrzaj"]
         widgets = {
             # ➜ Date pickeri za datume dopisa
             "poslano": DateInput(),
             "razuman_rok": DateInput(),
+        }
+        help_texts = {
+            "kategorija": "Odaberi vrstu",
+            "rb_po_kategoriji": "Ručni unos broja u odabranom tipu dopisa"
         }
 
 class GradilisteForm(forms.ModelForm):

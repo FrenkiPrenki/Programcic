@@ -16,10 +16,10 @@ class DopisInline(admin.TabularInline):
 
 @admin.register(Dopis)
 class DopisAdmin(admin.ModelAdmin):
-    list_display = ('dogadjaj','broj','vrsta','poslano','razuman_rok','status','due_badge')
-    list_filter = ('dogadjaj','vrsta','status','razuman_rok')
+    list_display = ("id", 'dogadjaj', "kategorija", "rb_po_kategoriji", 'broj','vrsta','poslano','razuman_rok','status','due_badge')
+    list_filter = ('dogadjaj__gradiliste', "kategorija", 'vrsta','status','razuman_rok')
     search_fields = ('broj','sadrzaj')
-    inlines = [BiljeskaInline, PrilogInline]
+    ordering = ("dogadjaj__gradiliste", "kategorija", "rb_po_kategoriji", "id")
 
     def due_badge(self, obj):
         d = obj.days_to_due
