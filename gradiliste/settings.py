@@ -3,7 +3,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = 'Frenki'
 DEBUG = True
-ALLOWED_HOSTS = ["frenki.pythonanywhere.com"]
+ALLOWED_HOSTS = ["frenki.pythonanywhere.com", "127.0.0.1", "localhost", ".pythonanywhere.com"]
 CSRF_TRUSTED_ORIGINS = ["https://frenki.pythonanywhere.com"]
 
 INSTALLED_APPS = [
