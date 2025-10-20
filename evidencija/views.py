@@ -65,7 +65,7 @@ def dogadjaj_list(request, gradiliste_id):
         d_status = getattr(d, "status", None)
 
         dopisi = []
-        for dp in d.dopisi.all().order_by("broj", "id"):
+        for dp in d.dopisi.all().order_by("poslano", "id"):
             cls, label = due_badge(dp, ball_on_us, d_status)  # <-- pass status
             dopisi.append((dp, cls, label))
          
@@ -109,7 +109,7 @@ def dogadjaj_detail(request, gradiliste_id, pk):
     d_status = getattr(d, "status", None)
 
     rows = []
-    for dp in d.dopisi.all().order_by("broj", "id"):  # prilagodi ordering po želji
+    for dp in d.dopisi.all().order_by("poslano", "id"):  # prilagodi ordering po želji
         cls, label = due_badge(dp, ball_on_us, d_status)  # <-- pass status
         rows.append((dp, cls, label))
 

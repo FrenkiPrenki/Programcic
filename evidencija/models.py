@@ -85,7 +85,7 @@ class Dopis(models.Model):
     broj = models.CharField("Broj dopisa (staro)", max_length=50, blank=True)
     vrsta = models.CharField("Vrsta dopisa", max_length=20, choices=VRSTA_CHOICES, default='incoming')
     kategorija = models.CharField("Vrsta dopisa", max_length=30, choices=KATEGORIJA_CHOICES, blank=True, default='')
-    rb_po_kategoriji = models.PositiveIntegerField("Redni broj (po vrsti dopisa)", null=True, blank=True)
+    oznaka = models.CharField("Oznaka (po vrsti dopisa)", max_length=50, blank=True)
     poslano = models.DateField("Poslano", default=timezone.localdate)
     razuman_rok = models.DateField("Razuman rok za odgovor", default=default_razuman_rok)
     status = models.CharField("Status", max_length=20, choices=STATUS_CHOICES, default='open')
@@ -94,33 +94,33 @@ class Dopis(models.Model):
 
     class Meta:
         # sortirajmo po novom integeru (pa tie-break po id)
-        ordering = ["kategorija", "rb_po_kategoriji", "id"]
+        ordering = ["poslano", "id"]
         verbose_name = "Dopis"
         verbose_name_plural = "Dopisi"
        
     def __str__(self):
         kat = dict(self.KATEGORIJA_CHOICES).get(self.kategorija, '—')
-        if self.kategorija and self.rb_po_kategoriji:
-            return f"{kat} {self.rb_po_kategoriji} – {self.get_vrsta_display()}"
+        if self.kategorija and self.oznaka:
+            return f"{kat} {self.oznaka} – {self.get_vrsta_display()}"
         return f"Dopis – {self.get_vrsta_display()}"
     
     def clean(self):
         super().clean()
         # Ako ima i kategoriju i broj, provjeri jedinstvenost unutar *istog gradilišta* i *iste kategorije*
-        if self.kategorija and self.rb_po_kategoriji:
-            gradiliste_id = self.dogadjaj.gradiliste_id if self.dogadjaj_id else None
-            if gradiliste_id:
-                qs = Dopis.objects.filter(
+        if self.kategorija and self.oznaka and self.dogadjaj_id:
+            gradiliste_id = self.dogadjaj.gradiliste_id
+            qs = Dopis.objects.filter(
                     dogadjaj__gradiliste_id=gradiliste_id,
                     kategorija=self.kategorija,
-                    rb_po_kategoriji=self.rb_po_kategoriji,
+                    oznaka__iexact=self.oznaka,
                 )
-                if self.pk:
+            if self.pk:
                     qs = qs.exclude(pk=self.pk)
-                if qs.exists():
-                    raise ValidationError({
-                        "rb_po_kategoriji": "Taj broj već postoji za ovu vrstu dopisa na ovom gradilištu."
-                    })
+            if qs.exists():
+                from django.core.exceptions import ValidationError
+                raise ValidationError({
+                        "oznaka": "Ta oznaka već postoji za tu vrstu dopisa na ovom gradilištu."
+                })
 
     #@property
     #def days_to_due(self):

@@ -1,36 +1,34 @@
+# evidencija/admin.py
 from django.contrib import admin
-from .models import Dogadjaj, Dopis, Biljeska, Prilog
+from .models import Gradiliste, Dogadjaj, Dopis
 
-class BiljeskaInline(admin.TabularInline):
-    model = Biljeska
-    extra = 0
-
-class PrilogInline(admin.TabularInline):
-    model = Prilog
-    extra = 0
-
+# --- Inlines ---
 class DopisInline(admin.TabularInline):
     model = Dopis
     extra = 0
-    fields = ('broj','vrsta','poslano','razuman_rok','status','sadrzaj')
+    fields = ("kategorija", "oznaka", "vrsta", "poslano", "razuman_rok")
+    ordering = ("poslano", "id")
+    show_change_link = True
 
-@admin.register(Dopis)
-class DopisAdmin(admin.ModelAdmin):
-    list_display = ("id", 'dogadjaj', "kategorija", "rb_po_kategoriji", 'broj','vrsta','poslano','razuman_rok','status','due_badge')
-    list_filter = ('dogadjaj__gradiliste', "kategorija", 'vrsta','status','razuman_rok')
-    search_fields = ('broj','sadrzaj')
-    ordering = ("dogadjaj__gradiliste", "kategorija", "rb_po_kategoriji", "id")
-
-    def due_badge(self, obj):
-        d = obj.days_to_due
-        if d is None: return "—"
-        if d < 0: return f"⚠️ Kasni {abs(d)} d"
-        if d == 0: return "⏳ Rok danas"
-        if d <= 2: return f"⏳ {d} d"
-        return f"{d} d"
-    due_badge.short_description = "Rok"
+# --- Admini ---
+@admin.register(Gradiliste)
+class GradilisteAdmin(admin.ModelAdmin):
+    list_display = ("id", "naziv")
+    search_fields = ("naziv",)
+    ordering = ("id",)
 
 @admin.register(Dogadjaj)
 class DogadjajAdmin(admin.ModelAdmin):
-    list_display = ('broj','naziv','preporucena_radnja','datum')
+    list_display = ("id", "gradiliste", "broj", "naziv", "preporucena_radnja", "datum")
+    list_filter  = ("gradiliste", "preporucena_radnja")
+    search_fields = ("broj", "naziv", "opis")
+    ordering = ("gradiliste", "broj", "id")
     inlines = [DopisInline]
+
+@admin.register(Dopis)
+class DopisAdmin(admin.ModelAdmin):
+    list_display  = ("id", "dogadjaj", "kategorija", "oznaka", "vrsta", "poslano", "razuman_rok")
+    list_filter   = ("dogadjaj__gradiliste", "kategorija", "vrsta", "poslano")
+    search_fields = ("broj", "oznaka", "sadrzaj")
+    ordering      = ("dogadjaj__gradiliste", "dogadjaj", "kategorija", "oznaka", "poslano", "id")
+    autocomplete_fields = ("dogadjaj",)
