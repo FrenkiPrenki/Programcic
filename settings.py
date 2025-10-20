@@ -1,4 +1,5 @@
 from pathlib import Path
+import os
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = 'django-insecure-promijeni_me_u_nesto_svoje'
@@ -48,8 +49,17 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'gradiliste.wsgi.application'
 
+# Lokalno koristi ./db.sqlite3; na PA koristi /home/Frenki/db_prod.sqlite3 ako postoji
+DB_PATH = BASE_DIR / "db.sqlite3"
+PA_DB_PATH = Path("/home/Frenki/db_prod.sqlite3")
+if PA_DB_PATH.exists():
+    DB_PATH = PA_DB_PATH
+
 DATABASES = {
-    'default': {'ENGINE': 'django.db.backends.sqlite3','NAME': BASE_DIR / 'db.sqlite3'}
+    "default": {
+        "ENGINE": "django.db.backends.sqlite3",
+        "NAME": str(DB_PATH),
+    }
 }
 
 AUTH_PASSWORD_VALIDATORS = [
