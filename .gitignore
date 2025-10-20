@@ -1,12 +1,19 @@
-# ignoriraj virtual environment
-.venv/
-
-# ignoriraj automatske Python cache datoteke
-__pycache__/
-*.pyc
-
 # ignoriraj lokalnu SQLite bazu
 db.sqlite3
 
 # ignoriraj VS Code postavke (ako želiš)
 .vscode/
+
+__pycache__/
+*.pyc
+.venv/
+venv/
+.env
+.mypy_cache/
+.pytest_cache/
+.ipynb_checkpoints/
+build/
+dist/
+.eggs/
+*.egg-info/
+logs/
