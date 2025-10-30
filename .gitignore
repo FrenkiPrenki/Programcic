@@ -1,5 +1,6 @@
 # ignoriraj lokalnu SQLite bazu
 db.sqlite3
+*.sqlite3
 
 # ignoriraj VS Code postavke (ako želiš)
 .vscode/
