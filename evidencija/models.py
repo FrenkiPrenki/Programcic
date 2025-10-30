@@ -122,6 +122,10 @@ class Dopis(models.Model):
                         "oznaka": "Ta oznaka već postoji za tu vrstu dopisa na ovom gradilištu."
                 })
 
+    @property
+    def prikaz_broja(self):
+        return self.broj or self.oznaka or self.broj_int or "—"
+    
     #@property
     #def days_to_due(self):
     #    if self.razuman_rok:

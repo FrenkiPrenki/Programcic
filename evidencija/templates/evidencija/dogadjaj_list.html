@@ -101,7 +101,7 @@
             <tbody>
               {% for dopis, cls, label in dopisi %}
               <tr class="{{ cls }}">
-                <td>{{ dopis.broj|default:"—" }}</td>
+                <td>{{ dopis.prikaz_broja }}</td>
                 <td>{{ dopis.get_vrsta_display }}</td>
                 <td>{{ dopis.poslano|default:"—" }}</td>
                 <td>
