@@ -1,4 +1,5 @@
 from pathlib import Path
+import os
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = 'Frenki'
@@ -49,8 +50,16 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'gradiliste.wsgi.application'
 
+DB_PATH = BASE_DIR / "db.sqlite3"
+PA_DB_PATH = Path("/home/Frenki/db_prod.sqlite3")
+if PA_DB_PATH.exists():
+    DB_PATH = PA_DB_PATH
+
 DATABASES = {
-    'default': {'ENGINE': 'django.db.backends.sqlite3','NAME': BASE_DIR / 'db.sqlite3'}
+     "default": {
+        "ENGINE": "django.db.backends.sqlite3",
+        "NAME": str(DB_PATH),
+    }
 }
 
 AUTH_PASSWORD_VALIDATORS = [
