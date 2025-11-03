@@ -68,9 +68,9 @@
         <td class="nowrap">{{ dogadjaj.get_preporucena_radnja_display }}</td>
         <td class="nowrap">
           <div>{{ dogadjaj.datum|date:"d.m.Y" }}</div>
-          <div class="small text-muted">
-            Zadnji dopis: {{ last.poslano|default:"—" }}
-          </div>
+          {% if last and last.poslano %}
+            <span class="text-muted ms-2 small">| Zadnji dopis: {{ last.poslano|date:"d.m.Y" }}</span>
+          {% endif %}
         </td>
         <td class="nowrap">
           <div class="actions">
@@ -82,7 +82,6 @@
           </div>
         </td>
       </tr>
-
       <!-- skriveni red sa dopisima (ostaje kako je) -->
       <tr id="d-{{ dogadjaj.id }}" style="display:none;">
         <td colspan="5">
