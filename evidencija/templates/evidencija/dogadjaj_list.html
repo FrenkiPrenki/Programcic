@@ -9,6 +9,7 @@
     .table-compact td, .table-compact th { padding: .35rem .5rem; vertical-align: middle; }
     .truncate { max-width: 460px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .nowrap { white-space: nowrap; }
+    td.nowrap span {white-space: nowrap; }
     .actions { display: flex; flex-wrap: nowrap; gap: .4rem; align-items: center; }
     .btn.btn-sm { padding: .15rem .4rem; line-height: 1.1; }
     </style>
@@ -66,11 +67,9 @@
           </a>
         </td>
         <td class="nowrap">{{ dogadjaj.get_preporucena_radnja_display }}</td>
-        <td class="nowrap">
-          <div>{{ dogadjaj.datum|date:"d.m.Y" }}</div>
-          {% if last and last.poslano %}
-            <span class="text-muted ms-2 small">| Zadnji dopis: {{ last.poslano|date:"d.m.Y" }}</span>
-          {% endif %}
+        <td class="nowrap" style="white-space: nowrap;">
+          <strong>{{ dogadjaj.datum|date:"d.m.Y" }}</strong>
+          <span class="text-muted small ms-2">Zadnji dopis: {{ last.poslano|date:"d.m.Y"|default:"-"}}</span>
         </td>
         <td class="nowrap">
           <div class="actions">
