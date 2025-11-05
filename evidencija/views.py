@@ -54,49 +54,73 @@ from datetime import datetime  # ako već nije uvezeno
 def dogadjaj_list(request, gradiliste_id):
     g = get_object_or_404(Gradiliste, pk=gradiliste_id)
 
-    # Učitaj sve događaje za gradilište (možeš dodati ordering po potrebi)
-    dogadjaji = Dogadjaj.objects.filter(gradiliste=g).order_by("broj", "id")
+    # --- čitaj sort parametre iz URL-a ---
+    sort = request.GET.get("sort", "broj_asc")        # za događaje
+    d_sort = request.GET.get("d_sort", "poslano_desc")  # za dopise
+
+    # mapiranja tipki -> order_by klauzule
+    SORT_MAP = {
+        "broj_asc":   ("broj", "id"),
+        "broj_desc":  ("-broj", "id"),
+        "datum_asc":  ("datum", "id"),
+        "datum_desc": ("-datum", "id"),
+    }
+    D_SORT_MAP = {
+        "broj_asc":     ("broj", "id"),
+        "broj_desc":    ("-broj", "id"),
+        "poslano_asc":  ("poslano", "id"),
+        "poslano_desc": ("-poslano", "id"),
+        "rok_asc":      ("razuman_rok", "id"),
+        "rok_desc":     ("-razuman_rok", "id"),
+    }
+
+    order = SORT_MAP.get(sort, ("broj", "id"))
+    dopisi_order = D_SORT_MAP.get(d_sort, ("-poslano", "id"))
+
+    # --- dohvati događaje s traženim sortiranjem ---
+    dogadjaji = Dogadjaj.objects.filter(gradiliste=g).order_by(*order)
 
     rows = []
     for d in dogadjaji:
         # zadnji dopis i tko je na potezu
         last = d.dopisi.order_by("-poslano", "-id").first()
         ball_on_us = bool(last and getattr(last, "vrsta", None) == "incoming")
-        d_status = getattr(d, "status", None)
+        d_status = getattr(d, "status", "open")
 
+        # dopisi u traženom poretku
         dopisi = []
-        for dp in d.dopisi.all().order_by("poslano", "id"):
-            cls, label = due_badge(dp, ball_on_us, d_status)  # <-- pass status
+        for dp in d.dopisi.all().order_by(*dopisi_order):
+            cls, label = due_badge(dp, ball_on_us, d_status)
             dopisi.append((dp, cls, label))
-         
-         # BOJANJE GLAVNOG REDA DOGAĐAJA — SAMO PO ZADNJEM DOPISU
-        event_cls = ""
-        d_status = getattr(d, "status", "open")  # sigurno čitanje (default 'open')
 
+        # BOJANJE GLAVNOG REDA DOGAĐAJA — SAMO PO ZADNJEM DOPISU
+        event_cls = ""
         if (
             last
-            and d_status == "open"                                   # događaj nije zatvoren
-            and getattr(last, "vrsta", None) == "incoming"           # zadnji dopis je ulazni
-            and getattr(last, "status", "open") == "open"            # zadnji dopis NIJE zatvoren/odgovoren
+            and d_status == "open"                              # događaj nije zatvoren
+            and getattr(last, "vrsta", None) == "incoming"      # zadnji dopis ulazni
+            and getattr(last, "status", "open") == "open"       # zadnji dopis nije zatvoren/odgovoren
             and getattr(last, "razuman_rok", None)
         ):
             days = (last.razuman_rok - timezone.localdate()).days
             if days < 0:
-                event_cls = "table-danger"               # rok prošao
+                event_cls = "table-danger"     # rok prošao
             elif days <= 14:
-                event_cls = "table-warning"              # ≤14 dana do roka
-            else:
-                event_cls = ""                           # bez boje
-        else:
-            event_cls = ""                               # zatvoreno ili nema uvjeta → bez boje
+                event_cls = "table-warning"    # ≤ 14 dana do roka
 
         rows.append((d, dopisi, ball_on_us, last, event_cls))
 
-    return render(request, "evidencija/dogadjaj_list.html", {
-        "gradiliste": g,
-        "rows": rows,
-        "today": timezone.localdate(),
-    })
+    return render(
+        request,
+        "evidencija/dogadjaj_list.html",
+        {
+            "gradiliste": g,
+            "rows": rows,
+            "today": timezone.localdate(),
+            "sort": sort,
+            "d_sort": d_sort,
+        },
+    )
 
 def dogadjaj_detail(request, gradiliste_id, pk):
     d = get_object_or_404(Dogadjaj, pk=pk, gradiliste_id=gradiliste_id)
