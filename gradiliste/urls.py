@@ -1,6 +1,7 @@
 from django.contrib import admin
 from django.urls import path
 from evidencija import views
+from evidencija.views import dopisi_po_vrsti
 
 urlpatterns = [
     path("", views.gradiliste_list, name="gradiliste_list"),
@@ -32,4 +33,6 @@ urlpatterns = [
     views.dopis_update,
     name="dopis_update",
     ),
+
+    path("g/<slug:slug>/dopisi/", dopisi_po_vrsti, name="dopisi_po_vrsti"),
 ]

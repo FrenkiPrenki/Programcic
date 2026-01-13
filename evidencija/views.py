@@ -206,3 +206,57 @@ def dopis_update(request, gradiliste_id, pk):
     else:
         form = DopisForm(instance=dopis)
     return render(request, "evidencija/form.html", {"title": f"Uredi dopis – {gradiliste.naziv}", "form": form})
+
+from django.db.models import Q
+
+def dopisi_po_vrsti(request, slug: str):
+    """
+    Prikaži dopise iz svih događaja za određeno gradilište,
+    filtrirano po 'vrsta' (npr. ZZI).
+    """
+    gradiliste = get_object_or_404(Gradiliste, slug=slug)
+
+    # vrijednost iz URL-a: ?vrsta=ZZI
+    vrsta = request.GET.get("vrsta", "").strip()
+
+    qs = (
+        Dopis.objects
+        .select_related("dogadjaj", "dogadjaj__gradiliste")
+        .filter(dogadjaj__gradiliste=gradiliste)
+    )
+
+    if vrsta:
+        qs = qs.filter(vrsta=vrsta)
+
+    # sortiranje (po defaultu najnovije poslano prvo)
+    sort = request.GET.get("sort", "poslano_desc")
+    ordering_map = {
+        "poslano_desc": "-poslano",
+        "poslano_asc": "poslano",
+        "broj_desc": "-broj",
+        "broj_asc": "broj",
+        "rok_desc": "-razuman_rok",
+        "rok_asc": "razuman_rok",
+        "dogadjaj_desc": "-dogadjaj__broj",
+        "dogadjaj_asc": "dogadjaj__broj",
+    }
+    ordering = ordering_map.get(sort, "-poslano")
+    qs = qs.order_by(ordering, "-created_at")
+
+    # popis svih dostupnih "vrsta" (za dropdown)
+    vrsta_field = Dopis._meta.get_field("vrsta")
+    vrsta_choices = list(vrsta_field.choices)  # [("ZZI","ZZI"), ("incoming","Ulazno")...]
+    # izbaci prazne ako postoje
+    vrsta_choices = [(k, v) for (k, v) in vrsta_choices if k]
+
+    return render(
+        request,
+        "evidencija/dopisi_po_vrsti.html",
+        {
+            "gradiliste": gradiliste,
+            "dopisi": qs,
+            "vrsta": vrsta,
+            "vrsta_choices": vrsta_choices,
+            "sort": sort,
+        },
+    )

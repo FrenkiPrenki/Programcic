@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="hr">
+<head>
+  <meta charset="utf-8">
+  <title>Dopisi po vrsti – {{ gradiliste.naziv }}</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="container my-4">
+
+  <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
+    <div>
+      <h1 class="h4 mb-1">Dopisi po vrsti</h1>
+      <div class="text-muted">Gradilište: <strong>{{ gradiliste.naziv }}</strong></div>
+    </div>
+    <div class="d-flex gap-2">
+      <a class="btn btn-outline-secondary" href="{% url 'dogadjaj_list' gradiliste.slug %}">← Događaji</a>
+    </div>
+  </div>
+
+  <!-- Filter (vrsta) -->
+  <form method="get" class="row g-2 align-items-end mb-3">
+    <div class="col-12 col-md-4">
+      <label class="form-label">Vrsta dopisa</label>
+      <select name="vrsta" class="form-select">
+        <option value="">— Sve vrste —</option>
+        {% for key, label in vrsta_choices %}
+          <option value="{{ key }}" {% if vrsta == key %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div class="col-12 col-md-5">
+      <label class="form-label">Sortiranje</label>
+      <select name="sort" class="form-select">
+        <option value="poslano_desc" {% if sort == "poslano_desc" %}selected{% endif %}>Poslano ↓ (najnovije prvo)</option>
+        <option value="poslano_asc" {% if sort == "poslano_asc" %}selected{% endif %}>Poslano ↑</option>
+        <option value="rok_asc" {% if sort == "rok_asc" %}selected{% endif %}>Razuman rok ↑</option>
+        <option value="rok_desc" {% if sort == "rok_desc" %}selected{% endif %}>Razuman rok ↓</option>
+        <option value="broj_asc" {% if sort == "broj_asc" %}selected{% endif %}>Broj dopisa ↑</option>
+        <option value="broj_desc" {% if sort == "broj_desc" %}selected{% endif %}>Broj dopisa ↓</option>
+        <option value="dogadjaj_asc" {% if sort == "dogadjaj_asc" %}selected{% endif %}>Broj događaja ↑</option>
+        <option value="dogadjaj_desc" {% if sort == "dogadjaj_desc" %}selected{% endif %}>Broj događaja ↓</option>
+      </select>
+    </div>
+
+    <div class="col-12 col-md-3">
+      <button class="btn btn-primary w-100" type="submit">Primijeni</button>
+    </div>
+  </form>
+
+  <table class="table table-striped table-bordered align-middle">
+    <thead class="table-light">
+      <tr>
+        <th style="width:110px;">Događaj</th>
+        <th>Naziv događaja</th>
+        <th style="width:120px;">Broj dopisa</th>
+        <th style="width:160px;">Vrsta</th>
+        <th style="width:120px;">Poslano</th>
+        <th style="width:140px;">Razuman rok</th>
+        <th style="width:140px;">Status</th>
+        <th>Napomena</th>
+        <th style="width:110px;"></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for dp in dopisi %}
+      <tr>
+        <td>
+          <a href="{% url 'dogadjaj_detail' gradiliste.slug dp.dogadjaj.id %}">
+            #{{ dp.dogadjaj.broj }}
+          </a>
+        </td>
+        <td>{{ dp.dogadjaj.naziv }}</td>
+        <td>{{ dp.broj|default:"—" }}</td>
+        <td>{{ dp.get_vrsta_display }}</td>
+        <td>{{ dp.poslano|default:"—" }}</td>
+        <td>{{ dp.razuman_rok|default:"—" }}</td>
+        <td>{{ dp.get_status_display }}</td>
+        <td class="text-muted">{{ dp.sadrzaj|truncatechars:140 }}</td>
+        <td class="text-end">
+          <a class="btn btn-sm btn-outline-primary" href="{% url 'dopis_update' gradiliste.slug dp.id %}">Uredi</a>
+        </td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="9">Nema dopisa za odabrani filter.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+</body>
+</html>
