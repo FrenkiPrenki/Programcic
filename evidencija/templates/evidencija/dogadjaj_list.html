@@ -32,17 +32,16 @@
 
     <div class="ms-3">
       <strong>Sortiraj dopise:</strong>
-      <a href="?sort={{ sort }}&d_sort=broj_asc" class="btn btn-sm {% if d_sort == 'broj_asc' %}btn-dark{% else %}btn-outline-dark{% endif %}">Broj ↑</a>
-      <a href="?sort={{ sort }}&d_sort=broj_desc" class="btn btn-sm {% if d_sort == 'broj_desc' %}btn-dark{% else %}btn-outline-dark{% endif %}">Broj ↓</a>
-      <a href="?sort={{ sort }}&d_sort=poslano_desc" class="btn btn-sm {% if d_sort == 'poslano_desc' %}btn-dark{% else %}btn-outline-dark{% endif %}">Poslano ↓</a>
       <a href="?sort={{ sort }}&d_sort=poslano_asc" class="btn btn-sm {% if d_sort == 'poslano_asc' %}btn-dark{% else %}btn-outline-dark{% endif %}">Poslano ↑</a>
-      <a href="?sort={{ sort }}&d_sort=rok_asc" class="btn btn-sm {% if d_sort == 'rok_asc' %}btn-dark{% else %}btn-outline-dark{% endif %}">Rok ↑</a>
-      <a href="?sort={{ sort }}&d_sort=rok_desc" class="btn btn-sm {% if d_sort == 'rok_desc' %}btn-dark{% else %}btn-outline-dark{% endif %}">Rok ↓</a>
+      <a href="?sort={{ sort }}&d_sort=poslano_desc" class="btn btn-sm {% if d_sort == 'poslano_desc' %}btn-dark{% else %}btn-outline-dark{% endif %}">Poslano ↓</a>
+      <a href="?sort={{ sort }}&d_sort=broj_asc" class="btn btn-sm {% if d_sort == 'broj_asc' %}btn-dark{% else %}btn-outline-dark{% endif %}">Broj ↑</a>
+      <a href="?sort={{ sort }}&d_sort=broj_desc" class="btn btn-sm {% if d_sort == 'broj_desc' %}btn-dark{% else %}btn-outline-dark{% endif %}">Broj ↓</a>    
     </div>
 
     <div class="ms-auto d-flex gap-2">
       <a class="btn btn-success" href="{% url 'dogadjaj_create' gradiliste.id %}">+ Novi događaj</a>
       <a class="btn btn-secondary" href="/admin/">Admin</a>
+      <a class="btn btn-outline-primary" href="/gradilista/{{ gradiliste.id }}/dopisi/?vrsta=ZZI">ZZI dopisi</a>
     </div>
   </div>
 
