@@ -210,11 +210,11 @@ def dopis_update(request, gradiliste_id, pk):
 def dopisi_po_kategoriji(request, gradiliste_id: int):
     """
     Izvlači dopise iz svih događaja za JEDNO gradilište (po ID-u),
-    i filtrira po vrsti dopisa (npr. ZZI) preko ?vrsta=ZZI.
+    i filtrira po vrsti dopisa (npr. ZZI) preko ?kategorija=ZZI.
     """
     gradiliste = get_object_or_404(Gradiliste, id=gradiliste_id)
 
-    kategorija = (request.GET.get("vrsta") or "").strip()
+    kategorija = (request.GET.get("kategorija") or "").strip()
 
     dopisi = (
         Dopis.objects
