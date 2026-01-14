@@ -84,7 +84,7 @@ class Dopis(models.Model):
     broj_int = models.PositiveIntegerField("Broj dopisa (INT)", null=True, blank=True)
     broj = models.CharField("Broj dopisa (staro)", max_length=50, blank=True)
     vrsta = models.CharField("Vrsta dopisa", max_length=20, choices=VRSTA_CHOICES, default='incoming')
-    kategorija = models.CharField("Vrsta dopisa", max_length=30, choices=KATEGORIJA_CHOICES, blank=True, default='')
+    kategorija = models.CharField("Kategorija dopisa", max_length=30, choices=KATEGORIJA_CHOICES, blank=True, default='')
     oznaka = models.CharField("Oznaka (po vrsti dopisa)", max_length=50, blank=True)
     poslano = models.DateField("Poslano", default=timezone.localdate)
     razuman_rok = models.DateField("Razuman rok za odgovor", default=default_razuman_rok)

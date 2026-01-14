@@ -17,11 +17,11 @@
 
   <form method="get" class="row g-2 align-items-end mb-3">
     <div class="col-12 col-md-4">
-      <label class="form-label">Vrsta dopisa</label>
-      <select name="vrsta" class="form-select">
-        <option value="">— Sve vrste —</option>
-        {% for key, label in vrsta_choices %}
-          <option value="{{ key }}" {% if vrsta == key %}selected{% endif %}>{{ label }}</option>
+      <label class="form-label">Kategorija dopisa</label>
+      <select name="kategorija" class="form-select">
+        <option value="">— Sve kategorije —</option>
+        {% for key, label in kategorija_choices %}
+          <option value="{{ key }}" {% if kategorija == key %}selected{% endif %}>{{ label }}</option>
         {% endfor %}
       </select>
     </div>

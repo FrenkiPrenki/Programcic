@@ -207,14 +207,14 @@ def dopis_update(request, gradiliste_id, pk):
         form = DopisForm(instance=dopis)
     return render(request, "evidencija/form.html", {"title": f"Uredi dopis – {gradiliste.naziv}", "form": form})
 
-def dopisi_po_vrsti(request, gradiliste_id: int):
+def dopisi_po_kategoriji(request, gradiliste_id: int):
     """
     Izvlači dopise iz svih događaja za JEDNO gradilište (po ID-u),
     i filtrira po vrsti dopisa (npr. ZZI) preko ?vrsta=ZZI.
     """
     gradiliste = get_object_or_404(Gradiliste, id=gradiliste_id)
 
-    vrsta = (request.GET.get("vrsta") or "").strip()
+    kategorija = (request.GET.get("vrsta") or "").strip()
 
     dopisi = (
         Dopis.objects
@@ -222,8 +222,8 @@ def dopisi_po_vrsti(request, gradiliste_id: int):
         .filter(dogadjaj__gradiliste=gradiliste)
     )
 
-    if vrsta:
-        dopisi = dopisi.filter(vrsta=vrsta)
+    if kategorija:
+        dopisi = dopisi.filter(kategorija=kategorija)
 
     # sortiranje
     sort = request.GET.get("sort", "poslano_desc")
@@ -241,17 +241,17 @@ def dopisi_po_vrsti(request, gradiliste_id: int):
     dopisi = dopisi.order_by(ordering, "-created_at")
 
     # dropdown za vrste (uzima choices iz modela)
-    vrsta_field = Dopis._meta.get_field("vrsta")
-    vrsta_choices = [(k, v) for (k, v) in vrsta_field.choices if k]
+    kategorija_field = Dopis._meta.get_field("kategorija")
+    kategorija_choices = [(k, v) for (k, v) in kategorija_field.choices if k]
 
     return render(
         request,
-        "evidencija/dopisi_po_vrsti.html",
+        "evidencija/dopisi_po_kategoriji.html",
         {
             "gradiliste": gradiliste,
             "dopisi": dopisi,
-            "vrsta": vrsta,
-            "vrsta_choices": vrsta_choices,
+            "kategorija": kategorija,
+            "kategorija_choices": kategorija_choices,
             "sort": sort,
         },
     )

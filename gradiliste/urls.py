@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.urls import path
 from evidencija import views
-from evidencija.views import dopisi_po_vrsti
+from evidencija.views import dopisi_po_kategoriji
 
 urlpatterns = [
     path("", views.gradiliste_list, name="gradiliste_list"),
@@ -13,8 +13,7 @@ urlpatterns = [
     # ⬇⬇⬇ DODANO
     path("gradilista/<int:gradiliste_id>/dogadjaj/novo/", views.dogadjaj_create, name="dogadjaj_create"),
     path("gradilista/<int:gradiliste_id>/dogadjaj/<int:pk>/uredi/", views.dogadjaj_update, name="dogadjaj_update"),
-    path(
-    "gradilista/<int:gradiliste_id>/dogadjaj/<int:dogadjaj_id>/dopis/novo/",
+    path("gradilista/<int:gradiliste_id>/dogadjaj/<int:dogadjaj_id>/dopis/novo/",
     views.dopis_create_for_event,
     name="dopis_create_for_event",
 ),
@@ -34,5 +33,5 @@ urlpatterns = [
     name="dopis_update",
     ),
 
-    path("gradilista/<int:gradiliste_id>/dopisi/", dopisi_po_vrsti, name="dopisi_po_vrsti"),
+    path("gradilista/<int:gradiliste_id>/dopisi/", dopisi_po_kategoriji, name="dopisi_po_kategoriji"),
 ]
