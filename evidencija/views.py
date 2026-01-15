@@ -226,7 +226,7 @@ def dopisi_po_kategoriji(request, gradiliste_id: int):
         dopisi = dopisi.filter(kategorija=kategorija)
 
     # sortiranje
-    sort = request.GET.get("sort", "poslano_desc")
+    sort = request.GET.get("sort", "poslano_asc")
     ordering_map = {
         "poslano_desc": "-poslano",
         "poslano_asc": "poslano",
@@ -237,7 +237,7 @@ def dopisi_po_kategoriji(request, gradiliste_id: int):
         "dogadjaj_asc": "dogadjaj__broj",
         "dogadjaj_desc": "-dogadjaj__broj",
     }
-    ordering = ordering_map.get(sort, "-poslano")
+    ordering = ordering_map.get(sort, "poslano")
     dopisi = dopisi.order_by(ordering, "-created_at")
 
     # dropdown za vrste (uzima choices iz modela)
