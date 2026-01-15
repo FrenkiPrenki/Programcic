@@ -73,7 +73,7 @@ class Dopis(models.Model):
         ('', '—'),  # prazno je dopušteno
         ('zzi', 'ZZI'),
         ('potrazivanje', 'Potraživanje'),
-        ('obavijest_o_potrazivanju', 'Obavijest o Potraživanju')
+        ('obavijest_o_potrazivanju', 'Obavijest o Potraživanju'),
         ('prijedlog', 'Prijedlog'),
         ('uputa_inzenjera', 'Uputa Inženjera'),
         ('poboljsanje', 'Poboljšanje'),
