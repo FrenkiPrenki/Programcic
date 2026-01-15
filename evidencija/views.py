@@ -56,7 +56,7 @@ def dogadjaj_list(request, gradiliste_id):
 
     # --- čitaj sort parametre iz URL-a ---
     sort = request.GET.get("sort", "broj_asc")        # za događaje
-    d_sort = request.GET.get("d_sort", "poslano_desc")  # za dopise
+    d_sort = request.GET.get("d_sort", "poslano_asc")  # za dopise
 
     # mapiranja tipki -> order_by klauzule
     SORT_MAP = {
