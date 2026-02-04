@@ -21,14 +21,13 @@
   <div class="mb-2 d-flex flex-wrap align-items-center gap-2">
     <div class="me-2"><strong>Kategorija:</strong></div>
 
-    <div class="btn-group flex-wrap" role="group" aria-label="Kategorije dopisa">
+    <div class="btn-group flex-wrap" role="group">
       <!-- Sve -->
       <a class="btn btn-sm {% if not kategorija %}btn-primary{% else %}btn-outline-primary{% endif %}"
          href="?sort={{ sort }}">
         Sve
       </a>
 
-      <!-- Svaka kategorija -->
       {% for key, label in kategorija_choices %}
         <a class="btn btn-sm {% if kategorija == key %}btn-primary{% else %}btn-outline-primary{% endif %}"
            href="?kategorija={{ key }}&sort={{ sort }}">
@@ -38,34 +37,48 @@
     </div>
   </div>
 
-  <!-- SORT (ostaje kao dropdown) -->
+  <!-- SORT (auto-submit) -->
   <div class="row g-2 align-items-end">
     <div class="col-12 col-md-5">
       <label class="form-label">Sortiranje</label>
 
-      {# da sort ne izgubi kategoriju nakon submita #}
+      {# zadrži kategoriju pri promjeni sorta #}
       {% if kategorija %}
         <input type="hidden" name="kategorija" value="{{ kategorija }}">
       {% endif %}
 
-      <select name="sort" class="form-select">
-        <option value="poslano_desc" {% if sort == "poslano_desc" %}selected{% endif %}>Poslano ↓</option>
-        <option value="poslano_asc" {% if sort == "poslano_asc" %}selected{% endif %}>Poslano ↑</option>
-        <option value="rok_asc" {% if sort == "rok_asc" %}selected{% endif %}>Razuman rok ↑</option>
-        <option value="rok_desc" {% if sort == "rok_desc" %}selected{% endif %}>Razuman rok ↓</option>
-        <option value="broj_asc" {% if sort == "broj_asc" %}selected{% endif %}>Broj dopisa ↑</option>
-        <option value="broj_desc" {% if sort == "broj_desc" %}selected{% endif %}>Broj dopisa ↓</option>
-        <option value="dogadjaj_asc" {% if sort == "dogadjaj_asc" %}selected{% endif %}>Broj događaja ↑</option>
-        <option value="dogadjaj_desc" {% if sort == "dogadjaj_desc" %}selected{% endif %}>Broj događaja ↓</option>
-      </select>
-    </div>
+      <select name="sort"
+              class="form-select"
+              onchange="this.form.submit()">
 
-    <div class="col-12 col-md-3">
-      <button class="btn btn-primary w-100" type="submit">Primijeni</button>
+        <option value="poslano_asc" {% if sort == "poslano_asc" %}selected{% endif %}>
+          Poslano ↑ (kronološki)
+        </option>
+        <option value="poslano_desc" {% if sort == "poslano_desc" %}selected{% endif %}>
+          Poslano ↓
+        </option>
+        <option value="rok_asc" {% if sort == "rok_asc" %}selected{% endif %}>
+          Razuman rok ↑
+        </option>
+        <option value="rok_desc" {% if sort == "rok_desc" %}selected{% endif %}>
+          Razuman rok ↓
+        </option>
+        <option value="broj_asc" {% if sort == "broj_asc" %}selected{% endif %}>
+          Broj dopisa ↑
+        </option>
+        <option value="broj_desc" {% if sort == "broj_desc" %}selected{% endif %}>
+          Broj dopisa ↓
+        </option>
+        <option value="dogadjaj_asc" {% if sort == "dogadjaj_asc" %}selected{% endif %}>
+          Broj događaja ↑
+        </option>
+        <option value="dogadjaj_desc" {% if sort == "dogadjaj_desc" %}selected{% endif %}>
+          Broj događaja ↓
+        </option>
+      </select>
     </div>
   </div>
 </form>
-
 
   <table class="table table-striped table-bordered align-middle">
     <thead class="table-light">
