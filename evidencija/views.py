@@ -83,7 +83,7 @@ def dogadjaj_list(request, gradiliste_id):
     rows = []
     for d in dogadjaji:
         # zadnji dopis i tko je na potezu
-        last = d.dopisi.order_by("poslano", "-id").first()
+        last = d.dopisi.order_by("-poslano", "-id").first()
         ball_on_us = bool(last and getattr(last, "vrsta", None) == "incoming")
         d_status = getattr(d, "status", "open")
 

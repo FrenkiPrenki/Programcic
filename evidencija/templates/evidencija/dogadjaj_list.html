@@ -66,9 +66,11 @@
           </a>
         </td>
         <td class="nowrap">{{ dogadjaj.get_preporucena_radnja_display }}</td>
-        <td class="nowrap" style="white-space: nowrap;">
-          <strong>{{ dogadjaj.datum|date:"d.m.Y" }}</strong>
-          <span class="text-muted small ms-2">Zadnji dopis: {{ last.poslano|date:"d.m.Y"|default:"-"}}</span>
+        <td style="white-space: nowrap;">
+          {{ dogadjaj.datum|date:"d.m.Y" }}
+        </td>
+        <td style="white-space: nowrap;">
+          {{ last.poslano|date:"d.m.Y"|default:"-" }}
         </td>
         <td class="nowrap">
           <div class="actions">
