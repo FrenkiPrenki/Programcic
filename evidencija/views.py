@@ -127,8 +127,8 @@ def dogadjaj_detail(request, gradiliste_id, pk):
     d_status = getattr(d, "status", None)
 
     # zadnji dopis i tko je na potezu
-    last = d.dopisi.order_by("poslano", "-id").first()
-    ball_on_us = bool(last and getattr(last, "vrsta", None) == "incoming")
+    last = d.dopisi.order_by("-poslano", "-id").first()
+    ball_on_us = bool(last and last.get_vrsta_display() == "Ulazno")
 
     d_status = getattr(d, "status", None)
 
