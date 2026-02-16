@@ -73,11 +73,6 @@ class Dogadjaj(models.Model):
         return f"{self.broj} – {self.naziv} ({self.get_preporucena_radnja_display()})"
 
 class Dopis(models.Model):
-    STATUS_CHOICES = [
-        ('open','Otvoreno'),
-        ('answered','Odgovoreno'),
-        ('closed','Zatvoreno'),
-    ]
     VRSTA_CHOICES = [
         ('incoming', 'Ulazno'),
         ('outgoing', 'Izlazno'),
@@ -102,7 +97,6 @@ class Dopis(models.Model):
     oznaka = models.CharField("Oznaka (po vrsti dopisa)", max_length=50, blank=True)
     poslano = models.DateField("Poslano", default=timezone.localdate)
     razuman_rok = models.DateField("Razuman rok za odgovor", default=default_razuman_rok)
-    status = models.CharField("Status", max_length=20, choices=STATUS_CHOICES, default='open')
     sadrzaj = models.TextField("Sadržaj", blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 

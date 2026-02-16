@@ -4,36 +4,44 @@ from django.utils import timezone
 from django.http import HttpRequest
 from .models import Gradiliste, Dogadjaj, Dopis
 from .forms import DogadjajForm, DopisForm, GradilisteForm
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from django.db.models import Min, Max, Prefetch
 
 from django.utils import timezone
 
-def due_badge(dopis, _ball_on_us_ignored, dogadjaj_status=None):
+def due_badge(dp, ball_on_us: bool, dogadjaj_status: str):
     """
-    Vrati (bootstrap_klasa, label) za badge.
-    Klasa je jedna od: text-bg-danger | text-bg-warning | text-bg-success | text-bg-secondary
+    Vraća (cls, label) za badge u tablici dopisa.
+    Bojanje je relevantno samo ako je loptica na nama (zadnji dopis ulazni),
+    i ako događaj nije zatvoren.
     """
-    # Dogadjaj zatvoren -> sivo
-    if dogadjaj_status == "closed":
-        return "text-bg-secondary", "—"
+    # Ako je događaj zatvoren, ništa ne forsiramo
+    if dogadjaj_status == "zatvoreno":
+        return ("text-bg-secondary", "Zatvoreno")
 
-    # Ako dopis još ima svoje status polje i nije 'open' -> sivo
-    if hasattr(dopis, "status") and getattr(dopis, "status", "open") in ("answered", "closed"):
-        return "text-bg-secondary", "—"
+    # Ako loptica nije na nama, rok nije hitan
+    if not ball_on_us:
+        return ("text-bg-secondary", "Kod njih je potez")
 
-    # Ako nema roka ili nije ulazni -> sivo
-    if getattr(dopis, "vrsta", None) != "incoming" or not getattr(dopis, "razuman_rok", None):
-        return "text-bg-secondary", "—"
+    today = timezone.localdate()
 
-    # Izračun roka
-    days = (dopis.razuman_rok - timezone.localdate()).days
-    if days < 0:
-        return "text-bg-danger", f"Kasni {abs(days)} d"
-    elif days <= 14:
-        return "text-bg-warning", f"{days} d do roka"
+    # Ako dopis ima razuman_rok, koristi njega
+    if dp.razuman_rok:
+        due = dp.razuman_rok
     else:
-        return "text-bg-success", f"{days} d do roka"
+        # fallback: 7 dana od 'poslano' ako postoji
+        if dp.poslano:
+            due = dp.poslano + timedelta(days=7)
+        else:
+            return ("text-bg-secondary", "Bez roka")
+
+    days_left = (due - today).days
+
+    if days_left < 0:
+        return ("text-bg-danger", f"Kasnimo {abs(days_left)}d")
+    if days_left <= 2:
+        return ("text-bg-warning", f"Rok {days_left}d")
+    return ("text-bg-success", f"Ima {days_left}d")
 
 def gradiliste_list(request):
     gradilista = Gradiliste.objects.all()
