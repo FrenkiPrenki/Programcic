@@ -19,8 +19,8 @@ class GradilisteAdmin(admin.ModelAdmin):
 
 @admin.register(Dogadjaj)
 class DogadjajAdmin(admin.ModelAdmin):
-    list_display = ("id", "gradiliste", "broj", "naziv", "preporucena_radnja", "datum")
-    list_filter  = ("gradiliste", "preporucena_radnja")
+    list_display = ("id", "gradiliste", "broj", "naziv", "status", "preporucena_radnja", "datum")
+    list_filter  = ("gradiliste", "status", "preporucena_radnja")
     search_fields = ("broj", "naziv", "opis")
     ordering = ("gradiliste", "broj", "id")
     inlines = [DopisInline]

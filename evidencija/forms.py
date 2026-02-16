@@ -9,7 +9,7 @@ class DogadjajForm(forms.ModelForm):
     class Meta:
         model = Dogadjaj
         # ➜ DODANO: "datum" pa ga možeš mijenjati na formi
-        fields = ["broj", "naziv", "opis", "preporucena_radnja", "datum"]
+        fields = ["broj", "naziv", "opis", "status", "preporucena_radnja", "datum"]
         widgets = {
             # ➜ Date picker za datum događaja
             "datum": DateInput(),

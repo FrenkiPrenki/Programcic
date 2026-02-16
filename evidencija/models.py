@@ -23,6 +23,19 @@ class Gradiliste(models.Model):
         return self.naziv
 
 class Dogadjaj(models.Model):
+    STATUS_CHOICES = [
+        ("otvoreno", "Otvoreno"),
+        ("odgovoreno", "Odgovoreno"),
+        ("zatvoreno", "Zatvoreno"),
+    ]
+
+    status = models.CharField(
+        "Status",
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default="otvoreno",
+    )
+
     RADNJA_CHOICES = [
         ('zzi','Zahtjev za informacijom (ZZI)'),
         ('claim','Potraživanje'),
