@@ -54,17 +54,7 @@
     </thead>
     <tbody>
       {% for dopis, cls, label in rows %}
-      <tr
-        {% if cls == 'text-bg-danger' %}
-          class="table-danger"
-        {% elif cls == 'text-bg-warning' %}
-          class="table-warning"
-        {% elif cls == 'text-bg-success' %}
-          class="table-success"
-        {% elif cls == 'text-bg-secondary' %}
-          class="table-secondary"
-        {% endif %}
-      >
+      <tr>
         <td>{{ dopis.prikaz_broja }}</td>
         <td>{{ dopis.get_vrsta_display }}</td>
         <td>{{ dopis.poslano|default:"—" }}</td>
