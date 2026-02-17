@@ -103,18 +103,20 @@ def dogadjaj_list(request, gradiliste_id):
 
         # BOJANJE GLAVNOG REDA DOGAĐAJA — SAMO PO ZADNJEM DOPISU
         event_cls = ""
-        if (
-            last
-            and d_status == "open"                              # događaj nije zatvoren
-            and getattr(last, "vrsta", None) == "incoming"      # zadnji dopis ulazni
-            and getattr(last, "status", "open") == "open"       # zadnji dopis nije zatvoren/odgovoren
-            and getattr(last, "razuman_rok", None)
-        ):
-            days = (last.razuman_rok - timezone.localdate()).days
-            if days < 0:
-                event_cls = "table-danger"     # rok prošao
-            elif days <= 14:
-                event_cls = "table-warning"    # ≤ 14 dana do roka
+
+        # 1) Ako je događaj zatvoren -> ne bojamo (možeš ostaviti prazno ili sivo)
+        if d_status == "zatvoreno":
+            event_cls = ""  # ili "table-secondary" ako želiš sivu pozadinu
+        else:
+            # 2) Bojamo samo ako zadnji dopis postoji i ulazni je (loptica na nama)
+            if last and getattr(last, "vrsta", None) == "incoming" and getattr(last, "razuman_rok", None):
+                days = (last.razuman_rok - timezone.localdate()).days
+                if days < 0:
+                    event_cls = "table-danger"   # rok prošao
+                elif days <= 14:
+                    event_cls = "table-warning"  # ≤ 14 dana do roka
+                else:
+                    event_cls = ""               # ima vremena, nema potrebe bojati
 
         rows.append((d, dopisi, ball_on_us, last, event_cls))
 

@@ -112,14 +112,13 @@
                 <th>Vrsta</th>
                 <th>Poslano</th>
                 <th>Razuman rok</th>
-                <th>Status</th>
                 <th>Napomena</th>
                 <th></th>
               </tr>
             </thead>
             <tbody>
               {% for dopis, cls, label in dopisi %}
-              <tr class="{{ cls }}">
+              <tr>
                 <td>{{ dopis.prikaz_broja }}</td>
                 <td>{{ dopis.get_vrsta_display }}</td>
                 <td>{{ dopis.poslano|default:"—" }}</td>
@@ -129,7 +128,6 @@
                     <small class="text-muted">{{ dopis.razuman_rok }}</small>
                   {% else %} — {% endif %}
                 </td>
-                <td>{{ dopis.get_status_display }}</td>
                 <td class="text-muted">{{ dopis.sadrzaj|truncatechars:120 }}</td>
                 <td><a class="btn btn-sm btn-outline-primary" href="{% url 'dopis_update' gradiliste.id dopis.id %}">Otvori</a></td>
               </tr>
