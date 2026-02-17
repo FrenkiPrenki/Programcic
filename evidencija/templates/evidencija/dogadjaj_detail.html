@@ -60,7 +60,7 @@
         <td>{{ dopis.poslano|default:"—" }}</td>
         <td>
           {% if dopis.razuman_rok %}
-            <span class="badge {{ cls }}">{{ label }}</span>
+            <span class="badge bg-secondary">Rok</span>
             <div class="text-muted small mt-1">{{ dopis.razuman_rok }}</div>
           {% else %}
             —
