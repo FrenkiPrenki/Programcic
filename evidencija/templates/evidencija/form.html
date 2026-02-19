@@ -1,33 +1,104 @@
 <!doctype html>
 <html lang="hr">
+
 <head>
   <meta charset="utf-8">
   <title>{{ title }}</title>
   <style>
-    body { font-family: system-ui, Arial, sans-serif; margin: 24px; }
-    form { max-width: 720px; }
-    label { display:block; margin-top:12px; font-weight:600; }
-    input, select, textarea { width:100%; padding:8px; margin-top:6px; border:1px solid #ccc; border-radius:6px; }
-    .muted { color:#666; font-size:12px; }
-    button, a.btn { background:#222; color:#fff; padding:10px 14px; border:none; border-radius:8px; margin-top:16px; cursor:pointer; text-decoration:none; display:inline-block; }
-    a.btn.light { background:#eee; color:#222; }
+    body {
+      font-family: system-ui, Arial, sans-serif;
+      margin: 24px;
+    }
+
+    form {
+      max-width: 720px;
+    }
+
+    label {
+      display: block;
+      margin-top: 12px;
+      font-weight: 600;
+    }
+
+    input,
+    select,
+    textarea {
+      width: 100%;
+      padding: 8px;
+      margin-top: 6px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+    }
+
+    .muted {
+      color: #666;
+      font-size: 12px;
+    }
+
+    button,
+    a.btn {
+      background: #222;
+      color: #fff;
+      padding: 10px 14px;
+      border: none;
+      border-radius: 8px;
+      margin-top: 16px;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-block;
+    }
+
+    a.btn.light {
+      background: #eee;
+      color: #222;
+    }
   </style>
 </head>
+
 <body>
   <h1>{{ title }}</h1>
   <form method="post">
     {% csrf_token %}
     {{ form.non_field_errors }}
     {% for field in form %}
-      <label for="{{ field.id_for_label }}">{{ field.label }}</label>
-      {{ field }}
-      {% if field.help_text %}<div class="muted">{{ field.help_text }}</div>{% endif %}
-      {% for e in field.errors %}<div style="color:#b80000">{{ e }}</div>{% endfor %}
+    <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+    {{ field }}
+    {% if field.help_text %}<div class="muted">{{ field.help_text }}</div>{% endif %}
+    {% for e in field.errors %}<div style="color:#b80000">{{ e }}</div>{% endfor %}
     {% endfor %}
     <div>
       <button type="submit">Spremi</button>
       <a class="btn light" href="javascript:history.back()">Odustani</a>
     </div>
   </form>
+  {% if is_dopis_form %}
+  <script>
+    (function () {
+      const kat = document.getElementById("id_kategorija");
+      const broj = document.getElementById("id_broj");
+      if (!kat || !broj) return;
+
+      async function refreshBroj() {
+        const k = kat.value;
+        if (!k) return;
+
+        const url = "{% url 'next_broj_for_kategorija' gradiliste.id %}?kategorija=" + encodeURIComponent(k);
+
+        try {
+          const res = await fetch(url, { headers: { "Accept": "application/json" } });
+          if (!res.ok) return;
+          const data = await res.json();
+
+          // popuni samo ako je prazno (da ne pregazi ručni unos)
+          if (!broj.value) {
+            broj.value = data.next || "";
+          }
+        } catch (e) { }
+      }
+
+      kat.addEventListener("change", refreshBroj);
+    })();
+  </script>
+  {% endif %}
 </body>
 </html>

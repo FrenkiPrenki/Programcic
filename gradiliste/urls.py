@@ -33,5 +33,12 @@ urlpatterns = [
     name="dopis_update",
     ),
 
+    path(
+    "gradilista/<int:gradiliste_id>/next-broj/",
+    views.next_broj_for_kategorija,
+    name="next_broj_for_kategorija",
+),
+
     path("gradilista/<int:gradiliste_id>/dopisi/", dopisi_po_kategoriji, name="dopisi_po_kategoriji"),
+    
 ]

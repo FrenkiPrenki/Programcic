@@ -1,3 +1,7 @@
+import re
+from django.http import JsonResponse
+from django.views.decorators.http import require_GET
+from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, get_object_or_404, redirect
 from django.urls import reverse
 from django.utils import timezone
@@ -7,6 +11,7 @@ from .forms import DogadjajForm, DopisForm, GradilisteForm
 from datetime import date, datetime, timedelta
 from django.db.models import Min, Max, Prefetch
 from django.utils import timezone
+
 
 def due_badge(dp, ball_on_us: bool, dogadjaj_status: str):
     """
@@ -42,9 +47,13 @@ def due_badge(dp, ball_on_us: bool, dogadjaj_status: str):
         return ("text-bg-warning", f"Rok {days_left}d")
     return ("text-bg-success", f"Ima {days_left}d")
 
+
 def gradiliste_list(request):
     gradilista = Gradiliste.objects.all()
-    return render(request, "evidencija/gradiliste_list.html", {"gradilista": gradilista})
+    return render(
+        request, "evidencija/gradiliste_list.html", {"gradilista": gradilista}
+    )
+
 
 def gradiliste_create(request):
     if request.method == "POST":
@@ -54,31 +63,35 @@ def gradiliste_create(request):
             return redirect("dogadjaj_list", gradiliste_id=g.id)
     else:
         form = GradilisteForm()
-    return render(request, "evidencija/form.html", {"title": "Novo gradilište", "form": form})
+    return render(
+        request, "evidencija/form.html", {"title": "Novo gradilište", "form": form}
+    )
+
 
 from datetime import datetime  # ako već nije uvezeno
+
 
 def dogadjaj_list(request, gradiliste_id):
     g = get_object_or_404(Gradiliste, pk=gradiliste_id)
 
     # --- čitaj sort parametre iz URL-a ---
-    sort = request.GET.get("sort", "broj_asc")        # za događaje
+    sort = request.GET.get("sort", "broj_asc")  # za događaje
     d_sort = request.GET.get("d_sort", "poslano_asc")  # za dopise
 
     # mapiranja tipki -> order_by klauzule
     SORT_MAP = {
-        "broj_asc":   ("broj", "id"),
-        "broj_desc":  ("-broj", "id"),
-        "datum_asc":  ("datum", "id"),
+        "broj_asc": ("broj", "id"),
+        "broj_desc": ("-broj", "id"),
+        "datum_asc": ("datum", "id"),
         "datum_desc": ("-datum", "id"),
     }
     D_SORT_MAP = {
-        "broj_asc":     ("broj", "id"),
-        "broj_desc":    ("-broj", "id"),
-        "poslano_asc":  ("poslano", "id"),
+        "broj_asc": ("broj", "id"),
+        "broj_desc": ("-broj", "id"),
+        "poslano_asc": ("poslano", "id"),
         "poslano_desc": ("-poslano", "id"),
-        "rok_asc":      ("razuman_rok", "id"),
-        "rok_desc":     ("-razuman_rok", "id"),
+        "rok_asc": ("razuman_rok", "id"),
+        "rok_desc": ("-razuman_rok", "id"),
     }
 
     order = SORT_MAP.get(sort, ("broj", "id"))
@@ -121,7 +134,7 @@ def dogadjaj_list(request, gradiliste_id):
                 if due:
                     days = (due - timezone.localdate()).days
                     if days < 0:
-                        event_cls = "table-danger"   # rok prošao
+                        event_cls = "table-danger"  # rok prošao
                     elif days <= 14:
                         event_cls = "table-warning"  # ≤ 14 dana do roka
 
@@ -139,6 +152,7 @@ def dogadjaj_list(request, gradiliste_id):
         },
     )
 
+
 def dogadjaj_detail(request, gradiliste_id, pk):
     d = get_object_or_404(Dogadjaj, pk=pk, gradiliste_id=gradiliste_id)
     d_status = getattr(d, "status", None)
@@ -154,13 +168,18 @@ def dogadjaj_detail(request, gradiliste_id, pk):
         cls, label = due_badge(dp, ball_on_us, d_status)  # <-- pass status
         rows.append((dp, cls, label))
 
-    return render(request, "evidencija/dogadjaj_detail.html", {
-        "dogadjaj": d,
-        "gradiliste": d.gradiliste,
-        "ball_on_us": ball_on_us,
-        "last": last,
-        "rows": rows,
-    })
+    return render(
+        request,
+        "evidencija/dogadjaj_detail.html",
+        {
+            "dogadjaj": d,
+            "gradiliste": d.gradiliste,
+            "ball_on_us": ball_on_us,
+            "last": last,
+            "rows": rows,
+        },
+    )
+
 
 # ---------- FORME (bez admina) ----------
 def dogadjaj_create(request, gradiliste_id):
@@ -174,7 +193,12 @@ def dogadjaj_create(request, gradiliste_id):
             return redirect("dogadjaj_detail", gradiliste_id=gradiliste.id, pk=obj.id)
     else:
         form = DogadjajForm()
-    return render(request, "evidencija/form.html", {"title": f"Novi događaj – {gradiliste.naziv}", "form": form})
+    return render(
+        request,
+        "evidencija/form.html",
+        {"title": f"Novi događaj – {gradiliste.naziv}", "form": form},
+    )
+
 
 def dogadjaj_update(request, gradiliste_id, pk):
     gradiliste = get_object_or_404(Gradiliste, pk=gradiliste_id)
@@ -186,7 +210,12 @@ def dogadjaj_update(request, gradiliste_id, pk):
             return redirect("dogadjaj_list", gradiliste_id=gradiliste.id)
     else:
         form = DogadjajForm(instance=obj)
-    return render(request, "evidencija/form.html", {"title": f"Uredi događaj – {gradiliste.naziv}", "form": form})
+    return render(
+        request,
+        "evidencija/form.html",
+        {"title": f"Uredi događaj – {gradiliste.naziv}", "form": form},
+    )
+
 
 def dopis_create_for_event(request, gradiliste_id, dogadjaj_id):
     gradiliste = get_object_or_404(Gradiliste, pk=gradiliste_id)
@@ -196,17 +225,27 @@ def dopis_create_for_event(request, gradiliste_id, dogadjaj_id):
         form = DopisForm(request.POST)
         if form.is_valid():
             dopis = form.save(commit=False)
-            dopis.dogadjaj = dogadjaj   # vežemo na odabrani događaj, ignorira se što god je u formi
+            dopis.dogadjaj = (
+                dogadjaj  # vežemo na odabrani događaj, ignorira se što god je u formi
+            )
             dopis.save()
-            return redirect("dogadjaj_detail", gradiliste_id=gradiliste.id, pk=dogadjaj.id)
+            return redirect(
+                "dogadjaj_detail", gradiliste_id=gradiliste.id, pk=dogadjaj.id
+            )
     else:
         # ako tvoj DopisForm ima polje 'dogadjaj', bolje ga maknuti iz forme (exclude) ili ga ostaviti readonly
         form = DopisForm(initial={"dogadjaj": dogadjaj})
 
+
     return render(
         request,
         "evidencija/form.html",
-        {"title": f"Novi dopis – {dogadjaj.naziv}", "form": form},
+        {
+            "title": f"Novi dopis – {dogadjaj.naziv}",
+            "form": form,
+            "gradiliste": dogadjaj.gradiliste,
+            "is_dopis_form": True,
+        },
     )
 
 def dopis_update(request, gradiliste_id, pk):
@@ -222,7 +261,12 @@ def dopis_update(request, gradiliste_id, pk):
             return redirect("dogadjaj_list", gradiliste_id=gradiliste.id)
     else:
         form = DopisForm(instance=dopis)
-    return render(request, "evidencija/form.html", {"title": f"Uredi dopis – {gradiliste.naziv}", "form": form})
+    return render(
+        request,
+        "evidencija/form.html",
+        {"title": f"Uredi dopis – {gradiliste.naziv}", "form": form},
+    )
+
 
 def dopisi_po_kategoriji(request, gradiliste_id: int):
     """
@@ -233,10 +277,8 @@ def dopisi_po_kategoriji(request, gradiliste_id: int):
 
     kategorija = (request.GET.get("kategorija") or "").strip()
 
-    dopisi = (
-        Dopis.objects
-        .select_related("dogadjaj", "dogadjaj__gradiliste")
-        .filter(dogadjaj__gradiliste=gradiliste)
+    dopisi = Dopis.objects.select_related("dogadjaj", "dogadjaj__gradiliste").filter(
+        dogadjaj__gradiliste=gradiliste
     )
 
     if kategorija:
@@ -272,3 +314,30 @@ def dopisi_po_kategoriji(request, gradiliste_id: int):
             "sort": sort,
         },
     )
+
+
+@require_GET
+@login_required
+def next_broj_for_kategorija(request, gradiliste_id):
+    kategorija = (request.GET.get("kategorija") or "").strip()
+    if not kategorija:
+        return JsonResponse({"next": ""})
+
+    # svi dopisi za to gradilište i kategoriju
+    qs = Dopis.objects.filter(
+        dogadjaj__gradiliste_id=gradiliste_id, kategorija=kategorija
+    ).values_list("broj", flat=True)
+
+    # izvuci najveći broj na kraju stringa (npr. "ZZI 14" -> 14)
+    max_n = 0
+    for b in qs:
+        if not b:
+            continue
+        m = re.search(r"(\d+)\s*$", str(b))
+        if m:
+            n = int(m.group(1))
+            if n > max_n:
+                max_n = n
+
+    next_n = max_n + 1
+    return JsonResponse({"next": f"{kategorija.upper()} {next_n}"})
