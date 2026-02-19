@@ -105,7 +105,7 @@ def dogadjaj_list(request, gradiliste_id):
         event_cls = ""
 
         # 1) Ako je događaj zatvoren -> ne bojamo (možeš ostaviti prazno ili sivo)
-        if d_status == "zatvoreno":
+        if d_status in ("zatvoreno", "otvoreno"):
             event_cls = ""  # ili "table-secondary" ako želiš sivu pozadinu
         else:
             # 2) Bojamo samo ako zadnji dopis postoji i ulazni je (loptica na nama)
