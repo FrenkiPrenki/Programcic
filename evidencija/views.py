@@ -6,7 +6,6 @@ from .models import Gradiliste, Dogadjaj, Dopis
 from .forms import DogadjajForm, DopisForm, GradilisteForm
 from datetime import date, datetime, timedelta
 from django.db.models import Min, Max, Prefetch
-
 from django.utils import timezone
 
 def due_badge(dp, ball_on_us: bool, dogadjaj_status: str):
@@ -102,21 +101,27 @@ def dogadjaj_list(request, gradiliste_id):
             dopisi.append((dp, cls, label))
 
         # BOJANJE GLAVNOG REDA DOGAĐAJA — SAMO PO ZADNJEM DOPISU
+        # BOJANJE GLAVNOG REDA DOGAĐAJA — SAMO PO ZADNJEM DOPISU
         event_cls = ""
 
-        # 1) Ako je događaj zatvoren -> ne bojamo (možeš ostaviti prazno ili sivo)
-        if d_status in ("zatvoreno", "otvoreno"):
+        # 1) Ako je događaj riješen (odgovoreno ili zatvoreno) -> ne bojamo
+        if d_status in ("zatvoreno", "odgovoreno"):
             event_cls = ""  # ili "table-secondary" ako želiš sivu pozadinu
         else:
             # 2) Bojamo samo ako zadnji dopis postoji i ulazni je (loptica na nama)
-            if last and getattr(last, "vrsta", None) == "incoming" and getattr(last, "razuman_rok", None):
-                days = (last.razuman_rok - timezone.localdate()).days
-                if days < 0:
-                    event_cls = "table-danger"   # rok prošao
-                elif days <= 14:
-                    event_cls = "table-warning"  # ≤ 14 dana do roka
-                else:
-                    event_cls = ""               # ima vremena, nema potrebe bojati
+            if last and getattr(last, "vrsta", None) == "incoming":
+                # 3) Rok: koristi razuman_rok, a ako ga nema koristi 7 dana od 'poslano'
+                due = getattr(last, "razuman_rok", None)
+                if not due and getattr(last, "poslano", None):
+                    due = last.poslano + timedelta(days=7)
+
+                if due:
+                    days = (due - timezone.localdate()).days
+                    if days < 0:
+                        event_cls = "table-danger"   # rok prošao
+                    elif days <= 14:
+                        event_cls = "table-warning"  # ≤ 14 dana do roka
+
 
         rows.append((d, dopisi, ball_on_us, last, event_cls))
 
