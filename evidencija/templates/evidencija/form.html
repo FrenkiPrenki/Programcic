@@ -72,33 +72,54 @@
     </div>
   </form>
   {% if is_dopis_form %}
+  {% if is_dopis_form %}
   <script>
     (function () {
-      const kat = document.getElementById("id_kategorija");
-      const broj = document.getElementById("id_broj_int");
+      // nađi polja po "name" (robustno, ne ovisi o id-u)
+      const kat = document.querySelector('[name="kategorija"]');
+      const broj = document.querySelector('[name="broj_int"], [name="broj"]');
+
+      console.log("AUTO-BROJ init:", { katFound: !!kat, brojFound: !!broj });
+
       if (!kat || !broj) return;
 
       async function refreshBroj() {
-        const k = kat.value;
+        const k = (kat.value || "").trim();
+        console.log("AUTO-BROJ change kategorija =", k);
+
         if (!k) return;
 
-        const url = "{% url 'next_broj_for_kategorija' gradiliste.id %}?kategorija=" + encodeURIComponent(k);
+        const baseUrl = "{% url 'next_broj_for_kategorija' gradiliste.id %}";
+        const url = baseUrl + "?kategorija=" + encodeURIComponent(k);
+
+        console.log("AUTO-BROJ fetch:", url);
 
         try {
           const res = await fetch(url, { headers: { "Accept": "application/json" } });
-          if (!res.ok) return;
-          const data = await res.json();
+          console.log("AUTO-BROJ response:", res.status, res.headers.get("content-type"));
 
-          // popuni samo ako je prazno (da ne pregazi ručni unos)
+          const text = await res.text();
+          console.log("AUTO-BROJ body:", text.slice(0, 200));
+
+          // pokušaj parsirati JSON
+          let data;
+          try { data = JSON.parse(text); } catch (e) { return; }
+
           if (!broj.value) {
             broj.value = data.next || "";
           }
-        } catch (e) { }
+        } catch (e) {
+          console.log("AUTO-BROJ error:", e);
+        }
       }
 
       kat.addEventListener("change", refreshBroj);
+
+      // ako je kategorija već odabrana kad se forma učita
+      refreshBroj();
     })();
   </script>
   {% endif %}
 </body>
+
 </html>
